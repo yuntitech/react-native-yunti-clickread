@@ -1,0 +1,82 @@
+<resources>
+    <string name="app_name">书加加</string>
+    <string name="click_to_retry">加载失败，点我试试</string>
+    <string name="loading_resource_tips">正在努力加载资源%d</string>
+    <string name="load_resource_fail_tips">加载资源失败</string>
+    <string name="catalog">目录</string>
+    <string name="thumbnail">缩略图</string>
+    <string name="buy_and_pay">购买（%.2f学币）</string>
+    <string name="load_data_fail">数据加载失败</string>
+    <string name="free_read_end">试读结束</string>
+    <string name="no_resource_add">暂未添加资源</string>
+    <string name="no_free_page_tips">付费内容</string>
+    <string name="start_read">开始连读</string>
+    <string name="read_has_stopped">已停止</string>
+
+    <string name="has_buy">已购买的</string>
+    <string name="book_resource">图书资源</string>
+    <string name="clickread_book">点读书</string>
+    <string name="no_support_resource_type_tips">当前版本不支持,请升级到最新版本</string>
+    <string name="tips_leave_clickread_add_bookshelf">为方便您下次查看点读书，是否立即加入书架？</string>
+    <string name="temporarily_not_used">暂时不用</string>
+    <string name="operate_fail_try_again_later">操作失败，请稍后重试</string>
+    <string name="buy_now">立即购买</string>
+    <string name="no_resource">暂无资源</string>
+
+    <string name="download_tip_net_mobile">您正在使用移动网络，下载操作将产生流量费用</string>
+    <string name="download_tip_net_mobile_1">未连接WiFi,请注意流量消耗</string>
+    <string name="download_tip_already_download_all">已全部加入缓存列表</string>
+    <string name="download_with_file_size">下载（%dM）</string>
+    <string name="has_downloaded">已下载</string>
+    <string name="delete_offline_resource">删除离线包</string>
+    <string name="download_offline_resource">下载离线包</string>
+    <string name="update_now">立即更新</string>
+    <string name="update_">更新</string>
+    <string name="download_fail">下载失败</string>
+    <string name="no_enough_space">存储空间不足</string>
+
+    <string name="pause_download">暂停下载</string>
+    <string name="cancel_download">取消下载</string>
+    <string name="download_pause">等待下载\u2026</string>
+    <string name="download_start">点击继续下载\u2026</string>
+    <string name="download_ing">下载中</string>
+    <string name="has_pause">已暂停</string>
+    <string name="continue_download">继续下载</string>
+    <string name="mobile_net_operation_tips">请连接Wi-Fi后下载</string>
+    <string name="purchase">购买</string>
+    <string name="tip_view_clickread_after_pay">购买后即可学习所有内容~</string>
+    <string name="tip_view_spoken_after_pay">购买后即可使用口语测评功能~</string>
+    <string name="tip_download_after_pay">购买后即可下载~</string>
+    <string name="tip_delete_offline_resource">确认删除离线包？</string>
+    <string name="add_to_book_shelf">加入学习</string>
+    <!--删除-->
+    <string name="delete_ing">删除中...</string>
+    <string name="delete_success">删除成功</string>
+    <string name="delete_fail">删除失败</string>
+    <string name="click_read_page_index">%1$d/%2$d</string>
+    <string name="test_read_page_index">试读%1$d/%2$d</string>
+    <!--口语测评-->
+    <string name="spoken_test">口语测评</string>
+    <string name="test">测评</string>
+    <string name="record_tips_one">点击话筒，开始录音</string>
+    <string name="record_tips_two">点击波纹，结束录音</string>
+    <string name="rating">评分中...</string>
+    <string name="play_original_prefix">播放原音 %s</string>
+    <string name="play_record_prefix">播放录音 %s</string>
+    <string name="evaluate_fail_tips">评分失败，请检查网络后重试</string>
+    <string name="click_area">点读区域</string>
+    <string-array name="jazzy_effects">
+        <item>Standard</item>
+        <item>Tablet</item>
+        <item>CubeIn</item>
+        <item>CubeOut</item>
+        <item>FlipVertical</item>
+        <item>FlipHorizontal</item>
+        <item>Stack</item>
+        <item>ZoomIn</item>
+        <item>ZoomOut</item>
+        <item>RotateUp</item>
+        <item>RotateDown</item>
+        <item>Accordion</item>
+    </string-array>
+</resources>

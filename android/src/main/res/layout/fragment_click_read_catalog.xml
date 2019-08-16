@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:wheel="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="64dp"
+        android:layout_gravity="center_horizontal"
+        android:padding="20dp"
+        android:text="@string/catalog"
+        android:textColor="@color/color_33"
+        android:textSize="@dimen/size_18" />
+
+    <com.yunti.clickread.widget.ClickReadCatalogView
+        android:id="@+id/catalog_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.0" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@color/white"
+        android:clickable="true">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="@color/color_dd" />
+
+        <Button
+            android:id="@+id/btn_cache_whole_book"
+            android:layout_width="160dp"
+            android:layout_height="28dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/selector_button_blue_stroke"
+            android:paddingLeft="6dp"
+            android:paddingRight="6dp"
+            android:text="@string/download_with_file_size"
+            android:textColor="@color/blue_a"
+            android:textSize="@dimen/size_12" />
+
+        <TextView
+            android:id="@+id/download_loading_progress"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_centerInParent="true"
+            android:visibility="gone" />
+    </RelativeLayout>
+</LinearLayout>
