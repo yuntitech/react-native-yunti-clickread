@@ -1,6 +1,7 @@
 package com.yunti.clickread.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,10 +9,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.yt.ytdeep.client.dto.ClickReadCatalogDTO;
 import com.yunti.clickread.R;
+import com.yunti.clickread.RNYtClickreadModule;
 
 import java.util.List;
 
@@ -29,18 +32,24 @@ public class ClickReadCatalogAdapter extends RecyclerView.Adapter {
     private OnSectionItemClickListener mSectionClickListener;
     private int mHighLightIndex;
     private boolean mIsBookFree;
+    private boolean isBought;
 
-    public ClickReadCatalogAdapter(Context context, boolean isFree) {
+    public ClickReadCatalogAdapter(Context context) {
         this.mContext = context;
-        this.mIsBookFree = isFree;
     }
 
     public List<ClickReadCatalogDTO> getCatalogs() {
         return mCatalogs;
     }
 
-    public void setData(List<ClickReadCatalogDTO> catalogs) {
+    public void setData(List<ClickReadCatalogDTO> catalogs, boolean isBookFree) {
         mCatalogs = catalogs;
+        mIsBookFree = isBookFree;
+        notifyDataSetChanged();
+    }
+
+    public void refresh(boolean isBuy) {
+        this.isBought = isBuy;
         notifyDataSetChanged();
     }
 
@@ -126,11 +135,11 @@ public class ClickReadCatalogAdapter extends RecyclerView.Adapter {
                 }
             }
             //书籍已购买
-//            if (ResourceProvider.getInstance().isBuy()) {
-            mTvChapterName.setTextColor(mContext.getResources().getColor(R.color.color_22));
-            mIvLock.setVisibility(View.GONE);
-            mTvChapterPage.setVisibility(View.VISIBLE);
-//            }
+            if (isBought) {
+                mTvChapterName.setTextColor(mContext.getResources().getColor(R.color.color_22));
+                mIvLock.setVisibility(View.GONE);
+                mTvChapterPage.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -200,15 +209,15 @@ public class ClickReadCatalogAdapter extends RecyclerView.Adapter {
                 mTvSectionPage.setVisibility(View.VISIBLE);
             }
             //书籍已购买
-//            if (ResourceProvider.getInstance().isBuy()) {
-            if (mHighLightIndex == catalogIndex) {
-                mTvSectionName.setTextColor(mContext.getResources().getColor(R.color.blue_a));
-            } else {
-                mTvSectionName.setTextColor(mContext.getResources().getColor(R.color.color_66));
+            if (isBought) {
+                if (mHighLightIndex == catalogIndex) {
+                    mTvSectionName.setTextColor(mContext.getResources().getColor(R.color.blue_a));
+                } else {
+                    mTvSectionName.setTextColor(mContext.getResources().getColor(R.color.color_66));
+                }
+                mIvLock.setVisibility(View.GONE);
+                mTvSectionPage.setVisibility(View.VISIBLE);
             }
-            mIvLock.setVisibility(View.GONE);
-            mTvSectionPage.setVisibility(View.VISIBLE);
-//            }
 
         }
 
@@ -216,15 +225,15 @@ public class ClickReadCatalogAdapter extends RecyclerView.Adapter {
         public void onClick(View v) {
             if (mSectionClickListener != null
                     && mCatalog.getPages() != null && mCatalog.getPages().size() > 0) {
-                mSectionClickListener.onClick(mCatalog);
+                mSectionClickListener.onSectionClick(mCatalog);
             } else {
-//                CustomToast.showToast(mContext.getString(R.string.no_resource_add));
+                RNYtClickreadModule.showToast(mContext, mContext.getString(R.string.no_resource_add));
             }
         }
     }
 
     public interface OnSectionItemClickListener {
-        void onClick(ClickReadCatalogDTO section);
+        void onSectionClick(ClickReadCatalogDTO section);
     }
 
 }

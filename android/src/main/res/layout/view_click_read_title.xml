@@ -19,6 +19,7 @@
             android:src="@drawable/button_back" />
 
         <LinearLayout
+            android:id="@+id/ll_buttons"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -27,36 +28,42 @@
             android:gravity="center"
             android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/tv_catalog"
+            <Button
+                android:id="@+id/btn_catalog"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
                 android:drawableTop="@drawable/ic_some_reading_catalog"
                 android:drawablePadding="6dp"
-                android:text="目录" />
+                android:text="目录"
+                android:textColor="@color/color_66" />
 
-            <TextView
+            <Button
+                android:id="@+id/btn_click_area"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
-                android:drawableTop="@drawable/ic_some_reading_region_default"
+                android:background="@android:color/transparent"
+                android:drawableTop="@drawable/selector_click_area_default"
                 android:drawablePadding="6dp"
-                android:text="点击区域" />
+                android:text="点击区域"
+                android:textColor="@color/selector_black_gray" />
 
-            <TextView
-                android:id="@+id/tv_buy"
+            <Button
+                android:id="@+id/btn_buy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
+                android:background="@android:color/transparent"
                 android:drawableTop="@drawable/ic_some_reading_buy"
                 android:drawablePadding="6dp"
-                android:text="购买" />
+                android:text="购买"
+                android:textColor="@color/color_66" />
 
         </LinearLayout>
     </LinearLayout>
 
 
     <View
+        android:id="@+id/view_divider"
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
         android:background="@color/color_cc" />

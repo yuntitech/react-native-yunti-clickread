@@ -2,6 +2,7 @@ package com.yunti.clickread.adapter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,16 +32,20 @@ public class ThumbnailAdapter extends RecyclerView.Adapter {
 
     public ThumbnailAdapter(Context context) {
         this.mContext = context;
+        this.mPages = new ArrayList<>();
     }
 
     public void setData(List<ClickReadPage> pages) {
-        this.mPages = pages;
-        this.notifyDataSetChanged();
+        if (pages != null) {
+            mPages.clear();
+            mPages.addAll(pages);
+            this.notifyDataSetChanged();
+        }
     }
 
     public void addItems(List<ClickReadPage> pages) {
         this.mPages.addAll(pages);
-        this.notifyDataSetChanged();
+        notifyDataSetChanged();
     }
 
     public void addItem(ClickReadPage page) {

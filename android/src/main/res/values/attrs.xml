@@ -19,4 +19,8 @@
         <attr name="outlineEnabled" format="boolean" />
         <attr name="outlineColor" format="color|reference" />
     </declare-styleable>
+
+    <declare-styleable name="OptionItemView">
+        <attr name="option" format="string" />
+    </declare-styleable>
 </resources>

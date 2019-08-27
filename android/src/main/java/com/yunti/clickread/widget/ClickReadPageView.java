@@ -5,9 +5,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -20,11 +20,11 @@ import com.bumptech.glide.request.transition.Transition;
 import com.nineoldandroids.animation.ObjectAnimator;
 import com.yt.ytdeep.client.dto.ClickReadPage;
 import com.yt.ytdeep.client.dto.ClickReadTrackinfo;
+import com.yunti.clickread.FetchInfo;
 import com.yunti.clickread.R;
-import com.yunti.util.ResourceUrlUtils;
+import com.yunti.util.ResourceUtils;
 import com.yunti.util.YTDisplayHelper;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,7 +57,7 @@ public class ClickReadPageView extends RelativeLayout {
     private ObjectAnimator mAnimator;
     private PhotoViewAttacher mAttacher;
     private RectF mCurFrame;
-    private OnClickAreaListener mClickListener;
+    private ClickReadPageViewDelegate mDelegate;
     private ImageLoadListener mImageLoadListener;
     private final static int TITLE_BAR_HEIGHT = 64;
     private final static int MENU_BOTTOM_HEIGHT = 62;
@@ -66,7 +66,7 @@ public class ClickReadPageView extends RelativeLayout {
     private int statusBarHeight;
     private boolean isLoadImageSuccess = false;
     private int position;
-    private boolean isShowClickArea = true;
+    private boolean isShowClickArea = false;
 
     public ClickReadPageView(Context context) {
         super(context);
@@ -83,8 +83,8 @@ public class ClickReadPageView extends RelativeLayout {
         init(context);
     }
 
-    public void setOnClickAreaListener(OnClickAreaListener listener) {
-        this.mClickListener = listener;
+    public void setDelegate(ClickReadPageViewDelegate delegate) {
+        mDelegate = delegate;
     }
 
     public void setImageLoadListener(ImageLoadListener listener) {
@@ -119,23 +119,23 @@ public class ClickReadPageView extends RelativeLayout {
                         && mCurFrame.right == frame.right
                         && mCurFrame.top == frame.top
                         && mCurFrame.bottom == frame.bottom) {
-                    if (mClickListener != null && position < mClickPage.getTracks().size()) {
-                        mClickListener.onClickSameArea();
+                    if (mDelegate != null && position < mClickPage.getTracks().size()) {
+                        mDelegate.onClickSameArea();
                         switchFrame(mCurFrame);
                     }
                 } else {
                     mCurFrame = frame;
                     switchFrame(frame);
-                    if (mClickListener != null && position < mClickPage.getTracks().size()) {
-                        mClickListener.onClickHotArea(mClickPage.getTracks().get(position));
+                    if (mDelegate != null && position < mClickPage.getTracks().size()) {
+                        mDelegate.onClickHotArea(mClickPage.getTracks().get(position));
                     }
                 }
             }
 
             @Override
             public void onClickOtherArea() {
-                if (mClickListener != null) {
-                    mClickListener.onClickOtherArea();
+                if (mDelegate != null) {
+                    mDelegate.onClickOtherArea();
                 }
             }
         });
@@ -342,8 +342,9 @@ public class ClickReadPageView extends RelativeLayout {
         int overrideWidth = smallResolution ? mScreenWidth : BITMAP_WIDTH;
         int overrideHeight = smallResolution ? mScreenHeight : BITMAP_HEIGHT;
         mBuyNoticeView.setVisibility(GONE);
-        final String uri = ResourceUrlUtils.getImageUrl(page.getImgResId(), page.getImgResSign());
-        ;
+        String uri = ResourceUtils.getImageUri(mDelegate != null ? mDelegate.getClickReadId() : 0L,
+                page.getImgResId(),
+                page.getImgResSign(), FetchInfo.USER_ID, getContext());
         mImgTarget = new SimpleTarget<Bitmap>(mItemWidth, mItemHeight) {
             @Override
             public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
@@ -358,6 +359,22 @@ public class ClickReadPageView extends RelativeLayout {
                 .load(uri)
                 .into(mImgTarget);
 
+    }
+
+    public void refreshBookBuyTipsView() {
+        ClickReadBookBuyTipsView tipsView = findViewById(R.id.view_buy_book);
+        if (tipsView != null) {
+            removeView(tipsView);
+        }
+    }
+
+    public void renderBuyBookTips(String authVal, OnClickListener listener) {
+        ClickReadBookBuyTipsView tipsView = new ClickReadBookBuyTipsView(mContext);
+        tipsView.setId(R.id.view_buy_book);
+        tipsView.setOnClickListener(listener);
+        tipsView.refreshBuyBtnText(authVal);
+        addView(tipsView, new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT));
     }
 
     //设置背景图片大小
@@ -383,6 +400,12 @@ public class ClickReadPageView extends RelativeLayout {
         }
     }
 
+    public void reset() {
+        hideFrame();
+        resetScale();
+        hideClickArea();
+    }
+
     //转换成点读区域
     private List<RectF> convertTrackToRectF(ClickReadPage page) {
         List<RectF> mFrames = new ArrayList<>();
@@ -398,13 +421,15 @@ public class ClickReadPageView extends RelativeLayout {
         if (mImgTarget == null) return;
     }
 
-    public interface OnClickAreaListener {
+    public interface ClickReadPageViewDelegate {
 
         void onClickHotArea(ClickReadTrackinfo track);
 
         void onClickSameArea();
 
         void onClickOtherArea();
+
+        long getClickReadId();
     }
 
     public interface ImageLoadListener {

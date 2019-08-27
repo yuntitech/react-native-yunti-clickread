@@ -4,6 +4,10 @@ import android.os.Bundle;
 import android.text.TextUtils;
 
 import com.alibaba.fastjson.JSON;
+import com.cqtouch.entity.BaseType;
+import com.yt.ytdeep.client.dto.BuyResultDTO;
+import com.yt.ytdeep.client.dto.ClickReadDTO;
+import com.yt.ytdeep.client.dto.ResPlayDTO;
 import com.yunti.util.MD5Util;
 
 import java.util.HashMap;
@@ -17,6 +21,11 @@ public class FetchInfo {
     public static long USER_ID = 25;
     static Map<String, Object> apiCommonParameters;
 
+    private static final String QUERY_BY_BOOK_ID = "/clickreadservice/querybybookid.do";
+    private static final String IS_BUY = "/userorderservice/isbuy/v2.do";
+    private static final String ADD_TO_MY_BOOKS = "/userbooksservice/addtomybooks.do";
+
+
     static {
         apiCommonParameters = new HashMap<>();
         apiCommonParameters.put("_appn", "miniApp");
@@ -26,11 +35,24 @@ public class FetchInfo {
 //        apiCommonParameters.put("_channel", "yuntiguanwang");
     }
 
+    public static FetchInfoParams joinBookShelf(long bookId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", bookId);
+        return new FetchInfoParams(ADD_TO_MY_BOOKS, params, BaseType.class);
+    }
+
+    public static FetchInfoParams isBuy(long crId, int type) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", crId);
+        params.put("type", type);
+        params.put("user_id", USER_ID);
+        return new FetchInfoParams(IS_BUY, params, BuyResultDTO.class);
+    }
+
     public static FetchInfoParams queryByBookId(Long bookId) {
         Map<String, Object> dataMap = new HashMap<>();
         dataMap.put("bookId", bookId);
-        return new FetchInfoParams("/clickreadservice/querybybookid.do",
-                buildFormBody("/clickreadservice/querybybookid.do", dataMap));
+        return new FetchInfoParams(QUERY_BY_BOOK_ID, dataMap, ClickReadDTO.class);
     }
 
     public static FetchInfoParams playV3(Long resId, String resIdSign) {
@@ -38,30 +60,61 @@ public class FetchInfo {
         dataMap.put("resId", resId);
         dataMap.put("resIdSign", resIdSign);
         dataMap.put("act", "play");
-        return new FetchInfoParams("/resourceservice/play/v3.do",
-                buildFormBody("/resourceservice/play/v3.do", dataMap));
+        return new FetchInfoParams("/resourceservice/play/v3.do", dataMap, ResPlayDTO.class);
     }
 
 
     public static class FetchInfoParams {
-        private FormBody mFormBody;
+        private FormBody.Builder mFormBodyBuilder;
         private String mAction;
+        private Class mClass;
+        private String mFetchParams;
 
-        FetchInfoParams(String action, FormBody formBody) {
+        FetchInfoParams(String action, Map<String, Object> fetchParams, Class clazz) {
             mAction = action;
-            mFormBody = formBody;
+            mClass = clazz;
+            mFormBodyBuilder = new FormBody.Builder();
+            for (Map.Entry<String, Object> parameter : apiCommonParameters.entrySet()) {
+                if (parameter.getKey() == null || parameter.getValue() == null) {
+                    throw new IllegalArgumentException("parameter cannot be null");
+                }
+                String name = parameter.getKey().trim();
+                String value = parameter.getValue().toString().trim();
+                mFormBodyBuilder.add(name, value);
+            }
+            mFetchParams = JSON.toJSONString(fetchParams);
+            mFormBodyBuilder.add("_data", mFetchParams);
+            mFormBodyBuilder.add("_sign", sign(action, fetchParams));
         }
 
         public String getUrl() {
             return HOST + mAction;
         }
 
+        public String getAction() {
+            return mAction;
+        }
+
         public FormBody getFormBody() {
-            return mFormBody;
+            return mFormBodyBuilder.build();
+        }
+
+        public Class getClazz() {
+            return mClass;
+        }
+
+        public void addLdv(String ldv) {
+            if (ldv != null) {
+                mFormBodyBuilder.add("ldv", ldv);
+            }
+        }
+
+        public String getFetchParams() {
+            return mFetchParams;
         }
     }
 
-    private static FormBody buildFormBody(String action, Map<String, Object> dataMap) {
+    private static FormBody.Builder buildFormBody(String action, Map<String, Object> dataMap) {
         FormBody.Builder builder = new FormBody.Builder();
         for (Map.Entry<String, Object> parameter : apiCommonParameters.entrySet()) {
             if (parameter.getKey() == null || parameter.getValue() == null) {
@@ -73,7 +126,7 @@ public class FetchInfo {
         }
         builder.add("_data", JSON.toJSONString(dataMap));
         builder.add("_sign", sign(action, dataMap));
-        return builder.build();
+        return builder;
 
     }
 
@@ -97,10 +150,9 @@ public class FetchInfo {
             apiCommonParameters.put("_templateid", getLongValue(apiCommonBundle, "_templateid"));
             apiCommonParameters.put("_appid", apiCommonBundle.getString("_appid"));
             apiCommonParameters.put("_userId", getLongValue(apiCommonBundle, "_userId"));
-
+            apiCommonParameters.put("_tid", apiCommonBundle.getString("_tid"));
         }
     }
-
 
     private static String sign(String action, Map<String, Object> dataMap) {
         String signParam = "00000";
@@ -127,5 +179,6 @@ public class FetchInfo {
         Double value = bundle.getDouble(key);
         return value.longValue();
     }
+
 
 }

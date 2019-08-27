@@ -103,7 +103,6 @@ public class SnappingRecyclerView extends RecyclerView {
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
 
-
                 /** if scroll is caused by a touch (scroll touch, not any touch) **/
                 if (newState == SCROLL_STATE_TOUCH_SCROLL) {
                     /** if scroll was initiated already, it would probably be a tap **/
@@ -220,6 +219,7 @@ public class SnappingRecyclerView extends RecyclerView {
             ((ViewGroup.MarginLayoutParams) child.getLayoutParams()).setMarginEnd(endMargin);
         }
 
+
         /** If layout direction is RTL, swap the margins  **/
         if (ViewCompat.getLayoutDirection(child) == ViewCompat.LAYOUT_DIRECTION_RTL) {
             ((ViewGroup.MarginLayoutParams) child.getLayoutParams()).setMargins(endMargin, topMargin, startMargin, bottomMargin);
@@ -332,7 +332,6 @@ public class SnappingRecyclerView extends RecyclerView {
         stopScroll();
 
         int scrollDistance = getScrollDistance(child);
-
         if (scrollDistance != 0)
             smoothScrollBy(scrollDistance);
     }
@@ -364,7 +363,6 @@ public class SnappingRecyclerView extends RecyclerView {
             super.smoothScrollBy(0, distance);
             return;
         }
-
         super.smoothScrollBy(distance, 0);
     }
 
@@ -405,14 +403,12 @@ public class SnappingRecyclerView extends RecyclerView {
         public int size(View view) {
             if (_orientation == Orientation.VERTICAL)
                 return view.getHeight();
-
             return view.getWidth();
         }
 
         public float location(View view) {
             if (_orientation == Orientation.VERTICAL)
                 return view.getY();
-
             return view.getX();
         }
 

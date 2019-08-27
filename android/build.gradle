@@ -52,7 +52,13 @@ dependencies {
     }
     implementation 'com.badoo.mobile:android-weak-handler:1.1'
     implementation 'commons-io:commons-io:2.4'
+    implementation 'org.apache.commons:commons-collections4:4.0'
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation("com.squareup.okhttp3:okhttp:${OKHTTP_VERSION}")
+    implementation('com.cqtouch:commons-tool:1.1') {
+        exclude group: 'com.alibaba', module: 'fastjson'
+    }
+    implementation 'com.afollestad.material-dialogs:core:0.9.4.5'
+    implementation project(':@react-native-community_async-storage')
 }
   

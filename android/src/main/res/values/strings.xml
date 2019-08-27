@@ -37,6 +37,7 @@
 
     <string name="pause_download">暂停下载</string>
     <string name="cancel_download">取消下载</string>
+    <string name="cancel">取消</string>
     <string name="download_pause">等待下载\u2026</string>
     <string name="download_start">点击继续下载\u2026</string>
     <string name="download_ing">下载中</string>

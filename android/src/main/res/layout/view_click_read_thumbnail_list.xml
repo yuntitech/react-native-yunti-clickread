@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_bottom_bar"
+    android:layout_width="match_parent"
+    android:layout_height="62dp"
+    android:clipChildren="false">
+
+    <com.yunti.view.SnappingRecyclerView
+        android:id="@+id/rv_thumbnail"
+        android:layout_width="match_parent"
+        android:layout_height="62dp"
+        android:background="@color/color_ed"
+        android:clipChildren="false" />
+
+    <ImageView
+        android:layout_width="42dp"
+        android:layout_height="62dp"
+        android:layout_centerInParent="true"
+        android:paddingRight="4dp"
+        android:src="@drawable/shape_frame_red" />
+</merge>

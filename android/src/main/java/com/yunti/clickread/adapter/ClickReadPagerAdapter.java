@@ -1,6 +1,7 @@
 package com.yunti.clickread.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -8,7 +9,10 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.yt.ytdeep.client.dto.ClickReadPage;
+import com.yt.ytdeep.client.dto.ClickReadTrackinfo;
 import com.yunti.clickread.widget.ClickReadPageView;
+
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.List;
 
@@ -19,16 +23,16 @@ import java.util.List;
 
 public class ClickReadPagerAdapter extends PagerAdapter {
 
-    private ViewPager mJazzy;
     private List<ClickReadPage> mPages;
     private Context mContext;
-    private ClickReadPageView.OnClickAreaListener mClickListener;
+    private View.OnClickListener mOnBuyClickListener;
+    private ClickReadPageView.ClickReadPageViewDelegate mPageViewDelegate;
     private ClickReadPageView.ImageLoadListener mImageLoadListener;
-    public final static String VIEW_TAG = "pager_view_";
+    public final static String TAG_VIEW = "pager_view_";
+    public final static String TAG_BUY_VIEW = "pager_buy_view";
 
-    public ClickReadPagerAdapter(Context context, ViewPager jazz) {
+    public ClickReadPagerAdapter(Context context) {
         this.mContext = context;
-        this.mJazzy = jazz;
     }
 
     public void setData(List<ClickReadPage> pages) {
@@ -43,23 +47,37 @@ public class ClickReadPagerAdapter extends PagerAdapter {
 
     public void addPages(List<ClickReadPage> pages) {
         this.mPages.addAll(pages);
-        this.notifyDataSetChanged();
+        notifyDataSetChanged();
     }
 
-    public void setOnClickAreaListener(ClickReadPageView.OnClickAreaListener listener) {
-        this.mClickListener = listener;
+    public void removePage(ClickReadPage page) {
+        if (mPages != null) {
+            mPages.remove(page);
+        }
+    }
+
+    public void setOnBuyClickListener(View.OnClickListener listener) {
+        this.mOnBuyClickListener = listener;
+    }
+
+    public void setPageViewDelegate(ClickReadPageView.ClickReadPageViewDelegate pageViewDelegate) {
+        mPageViewDelegate = pageViewDelegate;
     }
 
     public void setImageLoadListener(ClickReadPageView.ImageLoadListener listener) {
         this.mImageLoadListener = listener;
     }
 
-
     public ClickReadPage getItem(int position) {
-        if (position >= mPages.size()) {
-            position = mPages.size() - 1;
+        if (CollectionUtils.isEmpty(mPages) || position < 0) {
+            return null;
         }
-        return mPages.get(position);
+        return mPages.get(Math.min(position, mPages.size() - 1));
+    }
+
+    public List<ClickReadTrackinfo> getTracks(int position) {
+        ClickReadPage clickReadPage = getItem(position);
+        return clickReadPage != null ? clickReadPage.getTracks() : null;
     }
 
     @Override
@@ -69,17 +87,34 @@ public class ClickReadPagerAdapter extends PagerAdapter {
 
     @Override
     public Object instantiateItem(ViewGroup container, final int position) {
+        ClickReadPage clickReadPage = getItem(position);
         ClickReadPageView pageView = new ClickReadPageView(mContext);
-        pageView.setBookPage(mPages.get(position), position);
-        if (mClickListener != null) {
-            pageView.setOnClickAreaListener(mClickListener);
+        if (mPageViewDelegate != null) {
+            pageView.setDelegate(mPageViewDelegate);
         }
         if (mImageLoadListener != null) {
             pageView.setImageLoadListener(mImageLoadListener);
         }
-        container.addView(pageView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        pageView.setTag(VIEW_TAG + position);
+        container.addView(pageView, ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT);
+        pageView.setTag(TAG_VIEW + position);
+        //-1购买页
+        if (Long.valueOf(-1L).equals(clickReadPage.getId())) {
+            pageView.renderBuyBookTips(clickReadPage.getAuthVal(),
+                    mOnBuyClickListener);
+        } else {
+            pageView.setBookPage(clickReadPage, position);
+        }
         return pageView;
+    }
+
+
+    public void refreshBookBuyTipsView(ViewPager viewPager, int position) {
+        ClickReadPageView pageView = viewPager.findViewWithTag(TAG_VIEW + position);
+        if (pageView != null) {
+            pageView.refreshBookBuyTipsView();
+            pageView.setBookPage(getItem(position), position);
+        }
     }
 
     @Override

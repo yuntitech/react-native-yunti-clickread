@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="TextView">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="TextView.Size15" parent="TextView">
+        <item name="android:textSize">@dimen/size_15</item>
+    </style>
+
+    <style name="TextView.Size15.Color33" parent="TextView.Size15">
+        <item name="android:textColor">@color/color_33</item>
+    </style>
+
+    <style name="bottom_option_dialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowAnimationStyle">@style/bottom_option_dialog_animation</item>
+    </style>
+
+    <style name="bottom_option_dialog_animation">
+        <item name="android:windowEnterAnimation">@anim/in_from_bottom</item>
+        <item name="android:windowExitAnimation">@anim/out_to_bottom</item>
+    </style>
+
+</resources>

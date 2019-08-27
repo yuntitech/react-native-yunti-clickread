@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_add_to_book_shelf"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="top|right"
+    android:layout_marginTop="14.5dp"
+    android:layout_marginRight="-68dp"
+    android:background="@drawable/selector_blue_gradient_bg"
+    android:clickable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_some_reading_add_bookshelf" />
+
+    <TextView
+        android:layout_width="68dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:text="@string/add_to_book_shelf"
+        android:textColor="@color/white"
+        android:textSize="@dimen/size_14" />
+</merge>

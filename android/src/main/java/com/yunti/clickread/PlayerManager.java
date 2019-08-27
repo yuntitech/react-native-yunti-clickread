@@ -19,12 +19,11 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
+import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.badoo.mobile.util.WeakHandler;
 import com.facebook.react.modules.network.OkHttpClientProvider;
 import com.google.android.exoplayer2.C;
@@ -47,18 +46,17 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.yt.ytdeep.client.dto.ClickReadTrackinfo;
 import com.yt.ytdeep.client.dto.ResPlayDTO;
+import com.yunti.util.ResourceUtils;
 
-import java.io.IOException;
 import java.util.List;
 
-import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
 
 public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, Player.EventListener {
 
+    private Fragment mFragment;
     private Context mContext;
     private final DataSource.Factory dataSourceFactory;
     private SimpleExoPlayer mPlayer;
@@ -67,7 +65,6 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
     private static final int SHOW_PROGRESS = 1;
     private static final long mProgressUpdateInterval = 250;
     //
-    private boolean isPrepared = false;
     private boolean mPlayTracks = false;
     private long mClickReadId = 0;
     private List<ClickReadTrackinfo> trackInfoList;
@@ -84,6 +81,14 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         }
     });
 
+    public boolean isPlayTracks() {
+        return mPlayTracks;
+    }
+
+    public void togglePlayTracks() {
+        mPlayTracks = !mPlayTracks;
+    }
+
     public void setClickReadId(long clickReadId) {
         mClickReadId = clickReadId;
     }
@@ -92,29 +97,33 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         mEventListener = eventListener;
     }
 
-    public PlayerManager(Context context) {
-        mContext = context;
+    public PlayerManager(Fragment fragment, Context context) {
+        mFragment = fragment;
         mClient = OkHttpClientProvider.getOkHttpClient();
+        mContext = context;
         dataSourceFactory =
                 new DefaultDataSourceFactory(
-                        context, Util.getUserAgent(context, context.getString(R.string.app_name)));
-        mPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector());
+                        mContext, Util.getUserAgent(mContext, ""));
+        mPlayer = ExoPlayerFactory.newSimpleInstance(mContext, new DefaultTrackSelector());
         mPlayer.setPlayWhenReady(true);
         mPlayer.addListener(this);
     }
 
-    public void playTracks(boolean playTracks, List<ClickReadTrackinfo> trackInfoList) {
-        this.mPlayTracks = playTracks;
-        if (playTracks) {
-            this.trackInfoList = trackInfoList;
-            ClickReadTrackinfo trackInfo = trackInfoList.get(0);
-            play(trackInfo);
-            onSwitchTrack(trackInfo);
-        } else {
-            mPlayer.setPlayWhenReady(false);
-            if (this.trackInfoList != null) {
-                this.trackInfoList = null;
-            }
+    public void playTracks(List<ClickReadTrackinfo> trackInfoList) {
+        this.mPlayTracks = true;
+        this.trackInfoList = trackInfoList;
+        ClickReadTrackinfo trackInfo = mPlayTrackInfo != null
+                && trackInfoList.contains(mPlayTrackInfo) ?
+                mPlayTrackInfo : trackInfoList.get(0);
+        play(trackInfo);
+        onSwitchTrack(trackInfo);
+    }
+
+    public void stopTracks() {
+        this.mPlayTracks = false;
+        mPlayer.setPlayWhenReady(false);
+        if (this.trackInfoList != null) {
+            this.trackInfoList = null;
         }
     }
 
@@ -138,34 +147,27 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
             }
             //需要加载
             else {
-                isPrepared = false;
                 mPlayer.setPlayWhenReady(false);
-                sendRequest(trackInfo, new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        e.printStackTrace();
-                        Log.d("##", e.getMessage());
-                    }
+                String audioFilePath = ResourceUtils.getAudioFilePath(mClickReadId,
+                        trackInfo.getResId(), FetchInfo.USER_ID, mFragment.getContext());
+                if (TextUtils.isEmpty(audioFilePath)) {
+                    YTApi.fetch(FetchInfo.playV3(trackInfo.getResId(), trackInfo.getResSign()),
+                            new YTApi.Callback<ResPlayDTO>() {
+                                @Override
+                                public void onFailure(int code, String errorMsg) {
+                                }
 
-                    @Override
-                    public void onResponse(Call call, final Response response) throws IOException {
-                        if (!response.isSuccessful()) {
-                            throw new IOException("Unexpected code " + response);
-                        }
-                        String responseData = response.body().string();
-                        JSONObject responseObject = JSON.parseObject(responseData);
-                        boolean success = responseObject.getBoolean("success");
-                        ResPlayDTO resPlayDTO = JSON.parseObject(responseObject.getString("data"), ResPlayDTO.class);
-                        MediaSource contentMediaSource = buildMediaSource(Uri.parse(resPlayDTO.getUrl()));
-                        mPlayer.prepare(contentMediaSource);
-                        mPlayer.setPlayWhenReady(true);
-                        Log.d("##", responseData);
-                    }
-                });
+                                @Override
+                                public void onResponse(int code, ResPlayDTO response) {
+                                    play(trackInfo, response.getUrl());
+                                }
+                            }, mFragment);
+                } else {
+                    play(trackInfo, audioFilePath);
+                }
+
             }
         }
-
-
     }
 
     public void pause() {
@@ -196,6 +198,13 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         return new int[]{C.TYPE_HLS, C.TYPE_OTHER};
     }
 
+    private void play(ClickReadTrackinfo trackInfo, String uri) {
+        MediaSource contentMediaSource = buildMediaSource(Uri.parse(uri));
+        mPlayer.prepare(contentMediaSource);
+        seekTo(trackInfo);
+        mPlayer.setPlayWhenReady(true);
+    }
+
     // Internal methods.
 
     private MediaSource buildMediaSource(Uri uri) {
@@ -213,25 +222,15 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
     private void sendRequest(ClickReadTrackinfo trackInfo, Callback apiCallback) {
         FetchInfo.FetchInfoParams fetchInfoParams = FetchInfo.playV3(trackInfo.getResId(),
                 trackInfo.getResSign());
-        Log.d("##", "url is " + fetchInfoParams.getUrl());
         for (int n = 0; n < fetchInfoParams.getFormBody().size(); n++) {
             String name = fetchInfoParams.getFormBody().name(n);
             String val = fetchInfoParams.getFormBody().value(n);
-            Log.d("##", String.format("name is %s , val is %s", name, val));
         }
         Request request = new Request.Builder()
                 .post(fetchInfoParams.getFormBody())
                 .url(fetchInfoParams.getUrl())
                 .build();
         mClient.newCall(request).enqueue(apiCallback);
-    }
-
-    private void onPrepared() {
-        if (isPrepared) {
-            return;
-        }
-        isPrepared = true;
-        seekTo(mPlayTrackInfo);
     }
 
     private void onProgress(long currentPosition) {
@@ -255,6 +254,10 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
                 ClickReadTrackinfo nextTrack = trackInfoList.get(trackNext);
                 play(nextTrack);
                 onSwitchTrack(nextTrack);
+            } else if (trackNext >= trackInfoList.size()) {
+                if (mEventListener != null) {
+                    mEventListener.onTrackListEnd();
+                }
             } else {
                 mPlayer.setPlayWhenReady(false);
             }
@@ -301,7 +304,6 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
             case Player.STATE_BUFFERING:
                 break;
             case Player.STATE_READY:
-                onPrepared();
                 mProgressHandler.sendEmptyMessage(SHOW_PROGRESS);
                 break;
             case Player.STATE_ENDED:
@@ -342,6 +344,9 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
 
 
     public interface EventListener {
+
+        void onTrackListEnd();
+
         void onTrackEnd();
 
         void onSwitchTrack(ClickReadTrackinfo trackInfo);
