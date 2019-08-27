@@ -21,6 +21,12 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     lintOptions {
         abortOnError false
     }
@@ -61,4 +67,3 @@ dependencies {
     implementation 'com.afollestad.material-dialogs:core:0.9.4.5'
     implementation project(':@react-native-community_async-storage')
 }
-  
