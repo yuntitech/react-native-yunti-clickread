@@ -2,7 +2,6 @@ package com.yunti.clickread.fragment;
 
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,6 +65,7 @@ public class ClickReadFragment extends Fragment implements
     private boolean mIsInBookShelf = false;
     private List<ClickReadPage> mClickReadPages;
     private boolean mPlayTracksPageChanged = false;
+    private boolean mRestorePageIndex = false;
 
     public boolean isBought() {
         return isBought;
@@ -302,9 +302,10 @@ public class ClickReadFragment extends Fragment implements
                 } else {
                     curPageView.splashClickArea();
                 }
-                if (!isScrollByThumbnail) {
-                    mClickReadThumbnailList.scrollToPosition(position);
+                if (!isScrollByThumbnail && !mRestorePageIndex) {
+                    mClickReadThumbnailList.smoothScrollToPosition(position);
                 }
+                mRestorePageIndex = false;
                 isScrollByThumbnail = false;
                 setButtonsVisible(true);
             }
@@ -318,6 +319,7 @@ public class ClickReadFragment extends Fragment implements
 
     @Override
     public void onSelected(View view, int position) {
+        mClickReadThumbnailList.setSmoothScroll(true);
         isScrollByThumbnail = true;
         mViewPager.setCurrentItem(position);
     }
@@ -580,7 +582,10 @@ public class ClickReadFragment extends Fragment implements
                         public void resolve(String result) {
                             if (!TextUtils.isEmpty(result)) {
                                 int index = Integer.parseInt(result);
+                                mRestorePageIndex = true;
                                 mViewPager.setCurrentItem(index, false);
+                                mViewPager.postDelayed(() -> mClickReadThumbnailList.scrollToPosition(index),
+                                        600);
                             }
                         }
                     }, this);

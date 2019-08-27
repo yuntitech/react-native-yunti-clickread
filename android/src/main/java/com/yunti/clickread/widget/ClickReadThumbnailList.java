@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 import com.yt.ytdeep.client.dto.ClickReadPage;
@@ -60,8 +59,22 @@ public class ClickReadThumbnailList extends YTRelativeLayout {
         mThumbnailAdapter.setData(pages);
     }
 
+    public void setSmoothScroll(boolean smoothScroll) {
+        mRvThumbnail.setSmoothScroll(smoothScroll);
+    }
+
     public void scrollToPosition(int position) {
+        mRvThumbnail.setSmoothScroll(false);
         mRvThumbnail.scrollToPosition(position);
+    }
+
+    public void smoothScrollToPosition(int position) {
+        mRvThumbnail.setSmoothScroll(true);
+        mRvThumbnail.scrollToPosition(position);
+    }
+
+    public void scrollTo(int position) {
+        mRvThumbnail.scrollTo(position);
     }
 
     public int getCount() {
