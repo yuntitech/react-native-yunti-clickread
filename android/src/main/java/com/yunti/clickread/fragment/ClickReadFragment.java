@@ -1,6 +1,8 @@
 package com.yunti.clickread.fragment;
 
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -85,6 +87,7 @@ public class ClickReadFragment extends Fragment implements
         if (mPlayerManager != null) {
             mPlayerManager.release();
         }
+        storePageIndex();
         super.onDestroy();
     }
 
@@ -161,10 +164,17 @@ public class ClickReadFragment extends Fragment implements
         if (YTApi.API_CODE_CACHE == code) {
             YTApi.fetch(FetchInfo.queryByBookId(getBookId()), null, null);
         }
+        restorePageIndex();
+    }
+
+    public void userHasChanged() {
+        if (mClickReadDTO != null) {
+            fetchIsBuy(mClickReadDTO.getId());
+        }
     }
 
     private void fetchIsBuy(long crId) {
-        YTApi.fetch(FetchInfo.isBuy(crId, UserOrderDTO.USERORDER_ORDERTYPE_BUY_CLICKREAD),
+        YTApi.loadCacheAndFetch(FetchInfo.isBuy(crId, UserOrderDTO.USERORDER_ORDERTYPE_BUY_CLICKREAD),
                 new YTApi.Callback<BuyResultDTO>() {
                     @Override
                     public void onFailure(int code, String errorMsg) {
@@ -173,7 +183,16 @@ public class ClickReadFragment extends Fragment implements
 
                     @Override
                     public void onResponse(int code, BuyResultDTO response) {
+                        if (isBought) {
+                            return;
+                        }
                         isBought = response.isBuySuccess();
+                        if (isBought) {
+                            buySuccess();
+                            if (mDelegate != null) {
+                                mDelegate.onBuyResult(isBought);
+                            }
+                        }
                     }
                 }, this);
     }
@@ -315,7 +334,13 @@ public class ClickReadFragment extends Fragment implements
             mDelegate.onCatalogClick();
         } else if (viewId == R.id.btn_buy
                 || viewId == R.id.layout_buy_clickread_book) {
-            RNYtClickreadModule.openOrderHomeScreen(mClickReadDTO, getContext());
+            if (FetchInfo.isGuest()) {
+                RNYtClickreadModule.alert(this,
+                        (dialog, which) -> RNYtClickreadModule.pushLoginScreen(getContext()),
+                        "您需要登录后使用该功能", "登录");
+            } else {
+                RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getContext());
+            }
         } else if (viewId == R.id.img_back) {
             mDelegate.onBackClick();
         } else if (viewId == R.id.btn_click_area) {
@@ -323,6 +348,40 @@ public class ClickReadFragment extends Fragment implements
         } else if (viewId == R.id.btn_play_tracks) {
             onPressPlayTracks();
         }
+    }
+
+
+    public void buySuccess() {
+        isBought = true;
+        mTitleBar.setBuyButtonVisible(false);
+        if (CollectionUtils.isNotEmpty(mClickReadPages)) {
+            renderPage();
+            setButtonsVisible(true);
+            ClickReadPage fakePage = mPagerAdapter.getItem(mFreeEndPageIndex);
+            if (fakePage != null
+                    && Long.valueOf(-1L).equals(fakePage.getId())) {
+                mPagerAdapter.removePage(fakePage);
+            }
+            if (mFreeEndPageIndex >= 0) {
+                List<ClickReadPage> chargePages = mClickReadPages.subList(mFreeEndPageIndex,
+                        mClickReadPages.size());
+                mPagerAdapter.addPages(chargePages);
+                mClickReadThumbnailList.getThumbnailAdapter().addItems(chargePages);
+                mPagerAdapter.refreshBookBuyTipsView(mViewPager, mFreeEndPageIndex);
+                mClickReadThumbnailList.scrollToPosition(mViewPager.getCurrentItem());
+            }
+        }
+    }
+
+    public void scrollToPage(ClickReadPage page) {
+        int position = mPagerAdapter.getPosition(page);
+        if (position != -1) {
+            mViewPager.setCurrentItem(position, false);
+        }
+    }
+
+    public ClickReadPage getCurrentPage() {
+        return mPagerAdapter.getItem(mViewPager.getCurrentItem());
     }
 
     private void refresh() {
@@ -359,28 +418,6 @@ public class ClickReadFragment extends Fragment implements
             }
         }
         refresh();
-    }
-
-    public void buySuccess() {
-        isBought = true;
-        mTitleBar.setBuyButtonVisible(false);
-        if (CollectionUtils.isNotEmpty(mClickReadPages)) {
-            renderPage();
-            setButtonsVisible(true);
-            ClickReadPage fakePage = mPagerAdapter.getItem(mFreeEndPageIndex);
-            if (fakePage != null
-                    && Long.valueOf(-1L).equals(fakePage.getId())) {
-                mPagerAdapter.removePage(fakePage);
-            }
-            if (mFreeEndPageIndex >= 0) {
-                List<ClickReadPage> chargePages = mClickReadPages.subList(mFreeEndPageIndex,
-                        mClickReadPages.size());
-                mPagerAdapter.addPages(chargePages);
-                mClickReadThumbnailList.getThumbnailAdapter().addItems(chargePages);
-                mPagerAdapter.refreshBookBuyTipsView(mViewPager, mFreeEndPageIndex);
-                mClickReadThumbnailList.scrollToPosition(mViewPager.getCurrentItem());
-            }
-        }
     }
 
 
@@ -522,6 +559,39 @@ public class ClickReadFragment extends Fragment implements
 
     }
 
+
+    private void storePageIndex() {
+        if (mClickReadDTO != null) {
+            RNYtClickreadModule.setStorageItem(getContext(), getPageIndexKey(),
+                    String.valueOf(mViewPager.getCurrentItem()));
+        }
+    }
+
+    private void restorePageIndex() {
+        if (mClickReadDTO != null) {
+            RNYtClickreadModule.getStorageItem(getContext(), getPageIndexKey(),
+                    new RNYtClickreadModule.Callback() {
+                        @Override
+                        public void reject(String error) {
+
+                        }
+
+                        @Override
+                        public void resolve(String result) {
+                            if (!TextUtils.isEmpty(result)) {
+                                int index = Integer.parseInt(result);
+                                mViewPager.setCurrentItem(index, false);
+                            }
+                        }
+                    }, this);
+        }
+    }
+
+    private String getPageIndexKey() {
+        return Utils.format("CLICK_READ_CUR_PAGE_KEY_%d_%d",
+                FetchInfo.USER_ID, mClickReadDTO.getId());
+    }
+
     private ClickReadPageView getPageView(int position) {
         String itemTag = Utils.format("%s%d",
                 ClickReadPagerAdapter.TAG_VIEW, position);
@@ -534,6 +604,8 @@ public class ClickReadFragment extends Fragment implements
 
     public interface ClickReadFragmentDelegate {
         void onResponse(ClickReadDTO clickReadDTO);
+
+        void onBuyResult(boolean isBought);
 
         void onCatalogClick();
 

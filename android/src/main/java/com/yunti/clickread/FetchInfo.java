@@ -17,7 +17,7 @@ import okhttp3.FormBody;
 
 public class FetchInfo {
 
-    static String HOST = "https://app.bookln.cn";
+    public static String HOST = "https://app.bookln.cn";
     public static long USER_ID = 25;
     static Map<String, Object> apiCommonParameters;
 
@@ -76,7 +76,7 @@ public class FetchInfo {
             mFormBodyBuilder = new FormBody.Builder();
             for (Map.Entry<String, Object> parameter : apiCommonParameters.entrySet()) {
                 if (parameter.getKey() == null || parameter.getValue() == null) {
-                    throw new IllegalArgumentException("parameter cannot be null");
+                    continue;
                 }
                 String name = parameter.getKey().trim();
                 String value = parameter.getValue().toString().trim();
@@ -114,22 +114,6 @@ public class FetchInfo {
         }
     }
 
-    private static FormBody.Builder buildFormBody(String action, Map<String, Object> dataMap) {
-        FormBody.Builder builder = new FormBody.Builder();
-        for (Map.Entry<String, Object> parameter : apiCommonParameters.entrySet()) {
-            if (parameter.getKey() == null || parameter.getValue() == null) {
-                throw new IllegalArgumentException("parameter cannot be null");
-            }
-            String name = parameter.getKey().trim();
-            String value = parameter.getValue().toString().trim();
-            builder.add(name, value);
-        }
-        builder.add("_data", JSON.toJSONString(dataMap));
-        builder.add("_sign", sign(action, dataMap));
-        return builder;
-
-    }
-
 
     public static void setHostAndApiCommonParameters(Bundle bundle) {
         if (bundle == null) {
@@ -152,6 +136,10 @@ public class FetchInfo {
             apiCommonParameters.put("_userId", getLongValue(apiCommonBundle, "_userId"));
             apiCommonParameters.put("_tid", apiCommonBundle.getString("_tid"));
         }
+    }
+
+    public static boolean isGuest() {
+        return Long.valueOf(25L).equals(USER_ID);
     }
 
     private static String sign(String action, Map<String, Object> dataMap) {

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -14,7 +15,12 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
+import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.nineoldandroids.animation.ObjectAnimator;
@@ -45,7 +51,7 @@ public class ClickReadPageView extends RelativeLayout {
     private RelativeLayout mLayoutLoad;
     private TextView mNetWorkErrorTips;
     private TextView mBuyNoticeView;
-    private SimpleTarget<Bitmap> mImgTarget;
+    private CustomTarget<Bitmap> mImgTarget;
     private Context mContext;
     private int mScreenWidth;
     private int mScreenHeight;
@@ -345,14 +351,23 @@ public class ClickReadPageView extends RelativeLayout {
         String uri = ResourceUtils.getImageUri(mDelegate != null ? mDelegate.getClickReadId() : 0L,
                 page.getImgResId(),
                 page.getImgResSign(), FetchInfo.USER_ID, getContext());
-        mImgTarget = new SimpleTarget<Bitmap>(mItemWidth, mItemHeight) {
+        mImgTarget = new CustomTarget<Bitmap>(mItemWidth, mItemHeight) {
+
             @Override
-            public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+            public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                super.onLoadFailed(errorDrawable);
+            }
+
+            @Override
+            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                 setPageBgSize();
                 mPageBg.setImageBitmap(resource);
                 showLoadSuccess();
             }
 
+            @Override
+            public void onLoadCleared(@Nullable Drawable placeholder) {
+            }
         };
         Glide.with(mContext)
                 .asBitmap()
@@ -369,6 +384,7 @@ public class ClickReadPageView extends RelativeLayout {
     }
 
     public void renderBuyBookTips(String authVal, OnClickListener listener) {
+        Log.d("##", "renderBuyBookTips ");
         ClickReadBookBuyTipsView tipsView = new ClickReadBookBuyTipsView(mContext);
         tipsView.setId(R.id.view_buy_book);
         tipsView.setOnClickListener(listener);

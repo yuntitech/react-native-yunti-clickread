@@ -34,10 +34,11 @@
 
         <Button
             android:id="@+id/btn_cache_whole_book"
-            android:layout_width="160dp"
+            android:layout_width="wrap_content"
             android:layout_height="28dp"
             android:layout_centerInParent="true"
             android:background="@drawable/selector_button_blue_stroke"
+            android:minWidth="160dp"
             android:paddingLeft="6dp"
             android:paddingRight="6dp"
             android:text="@string/download_with_file_size"

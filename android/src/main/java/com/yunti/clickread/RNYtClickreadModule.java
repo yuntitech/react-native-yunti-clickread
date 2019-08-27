@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.widget.Toast;
 
@@ -110,30 +111,43 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void notifyDownloadStatus(String status) {
+    public void userHasChanged(ReadableMap params) {
+        FetchInfo.setHostAndApiCommonParameters(Arguments.toBundle(params));
         Intent intent = new Intent(ClickReadActivity.NAME);
-        intent.putExtra("action", "notifyDownloadStatus");
-        intent.putExtra("status", status);
+        intent.putExtra("action", "userHasChanged");
         LocalBroadcastManager.getInstance(getReactApplicationContext()).sendBroadcast(intent);
     }
 
-    public static void openOrderHomeScreen(ClickReadDTO clickReadDTO, Context cxt) {
+    public static void pushOrderHomeScreen(ClickReadDTO clickReadDTO, Context cxt) {
         if (cxt == null || clickReadDTO == null) {
             return;
         }
+        Long clickReadId = clickReadDTO.getId();
+        RNYtClickreadModule.push(cxt,
+                "cn.bookln.ConfirmOrderHomeScreen", clickReadId, 8);
+    }
+
+    public static void pushLoginScreen(Context cxt) {
+        if (cxt == null) {
+            return;
+        }
+        Bundle params = new Bundle();
+        params.putString("screen", "cn.bookln.LoginScreen");
+        params.putString("componentType", "screen");
+        RNYtClickreadModule.push(cxt, params);
+    }
+
+    private static void startActivity(Context cxt) {
         try {
-            Long clickReadId = clickReadDTO.getId();
-            RNYtClickreadModule.push(cxt,
-                    "cn.bookln.ConfirmOrderHomeScreen", clickReadId, 8);
             Intent intent = new Intent();
             Class<?> clazz = Class.forName("com.reactnativenavigation.controllers.NavigationActivity");
             intent.setClass(cxt, clazz);
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             cxt.startActivity(intent);
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     public static void push(Context cxt, String screen, Long bizId, int bizType) {
@@ -152,6 +166,7 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         intent.putExtra("action", "push");
         intent.putExtras(params);
         LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
+        startActivity(cxt);
     }
 
     public static void pop(Context cxt) {
@@ -202,12 +217,6 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         intent.putExtra("crId", crId);
         intent.putExtra("trackJSON", JSON.toJSONString(track));
         LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
-
-//
-
-
-        ReadableArray params = JavaOnlyArray.of(1, 2, 3);
-
     }
 
     public static void joinBookShelfSuccess(Context cxt) {
@@ -237,29 +246,48 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         toast.show();
     }
 
-    public static void alert(Activity activity,
-                             MaterialDialog.SingleButtonCallback positiveCallback) {
-        if (activity == null || activity.isFinishing()) {
+    public static void alert(Fragment fragment,
+                             MaterialDialog.SingleButtonCallback positiveCallback, int content) {
+        if (fragment == null) {
             return;
         }
-        new MaterialDialog.Builder(activity)
-                .title("提示")
-                .content(activity.getString(R.string.tip_view_clickread_after_pay))
-                .positiveText("确定")
-                .negativeText("取消")
-                .onPositive(positiveCallback)
-                .show();
+        alert(fragment, positiveCallback, fragment.getString(content), "确定");
+    }
+
+    public static void alert(Fragment fragment,
+                             MaterialDialog.SingleButtonCallback positiveCallback, String content,
+                             String positiveText) {
+        Activity activity = fragment.getActivity();
+        if (activity != null && !activity.isFinishing()) {
+            new MaterialDialog.Builder(activity)
+                    .title("提示")
+                    .content(content)
+                    .positiveText(positiveText)
+                    .negativeText("取消")
+                    .onPositive(positiveCallback)
+                    .show();
+        }
     }
 
     public static void getStorageItem(Context context,
-                                      String key, final Callback callback) {
+                                      String key, final Callback callback, Fragment fragment) {
         JavaOnlyArray params = new JavaOnlyArray();
         params.pushString(key);
-        getStorageItem(context, params, callback);
+        getStorageItem(context, params, callback, fragment);
+    }
+
+    public static void setStorageItem(Context context, String key, String value) {
+        JavaOnlyArray params = new JavaOnlyArray();
+        JavaOnlyArray keyValueArray = new JavaOnlyArray();
+        keyValueArray.pushString(key);
+        keyValueArray.pushString(value);
+        params.pushArray(keyValueArray);
+        setStorageItem(context, params);
     }
 
     private static void getStorageItem(Context context,
-                                       final ReadableArray keys, final Callback callback) {
+                                       final ReadableArray keys, final Callback callback,
+                                       Fragment fragment) {
         if (context == null || callback == null) {
             return;
         }
@@ -276,12 +304,34 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
                         if (resultList != null) {
                             resultList = (List<Object>) resultList.get(0);
                             Object value = resultList.get(1);
-                            callback.resolve(value != null ? value.toString() : null);
+                            runOnUiThread(fragment, () ->
+                                    callback.resolve(value != null ? value.toString() : null));
+
                         } else {
                             resultList = (List<Object>) argsList.get(0);
                             Object error = resultList.get(0);
-                            callback.reject(error != null ? error.toString() : null);
+                            runOnUiThread(fragment, () ->
+                                    callback.reject(error != null ? error.toString() : null));
                         }
+                    });
+                }
+            }
+        }
+    }
+
+    private static void setStorageItem(Context context,
+                                       final ReadableArray keyValueArray) {
+        if (context == null) {
+            return;
+        }
+        context = context.getApplicationContext();
+        if (context instanceof ReactApplication) {
+            ReactContext reactContext = ((ReactApplication) context).
+                    getReactNativeHost().getReactInstanceManager().getCurrentReactContext();
+            if (reactContext != null) {
+                AsyncStorageModule storageModule = reactContext.getNativeModule(AsyncStorageModule.class);
+                if (storageModule != null) {
+                    storageModule.multiSet(keyValueArray, args -> {
                     });
                 }
             }
@@ -318,6 +368,18 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
             }
         });
         dialog.show();
+    }
+
+    private static boolean checkValid(Fragment fragment) {
+        return fragment != null
+                && fragment.getActivity() != null
+                && !fragment.getActivity().isFinishing();
+    }
+
+    private static void runOnUiThread(Fragment fragment, Runnable runnable) {
+        if (fragment.getActivity() != null) {
+            fragment.getActivity().runOnUiThread(runnable);
+        }
     }
 
     public interface BottomSheetCallback {

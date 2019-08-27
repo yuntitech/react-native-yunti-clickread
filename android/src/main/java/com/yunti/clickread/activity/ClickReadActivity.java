@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,6 +16,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.yt.ytdeep.client.dto.ClickReadDTO;
+import com.yt.ytdeep.client.dto.ClickReadPage;
 import com.yunti.clickread.R;
 import com.yunti.clickread.RNYtClickreadModule;
 import com.yunti.clickread.fragment.ClickReadCatalogFragment;
@@ -24,7 +26,8 @@ import com.yunti.clickread.fragment.ClickReadFragment.ClickReadFragmentDelegate;
 
 public class ClickReadActivity extends AppCompatActivity
         implements ClickReadFragmentDelegate,
-        ClickReadCatalogFragment.ClickReadCatalogFragmentDelegate {
+        ClickReadCatalogFragment.ClickReadCatalogFragmentDelegate,
+        ClickReadCatalogFragment.OperationCallback {
 
     public static final String NAME = "com.yunti.clickread.activity.ClickReadActivity";
     private ClickReadCatalogFragment mClickReadCatalogFragment;
@@ -38,6 +41,7 @@ public class ClickReadActivity extends AppCompatActivity
             }
         }
     };
+    private ClickReadPage mCurGoPage;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,10 +60,36 @@ public class ClickReadActivity extends AppCompatActivity
                 = (ClickReadCatalogFragment) fragmentManager.findFragmentById(R.id.catalog_fragment);
         if (mClickReadCatalogFragment != null) {
             mClickReadCatalogFragment.setDelegate(this);
+            mClickReadCatalogFragment.setOperationCallback(this);
         }
         mDrawer = findViewById(R.id.layout_drawer);
         mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         mDrawer.setStatusBarBackgroundColor(Color.BLUE);
+        mDrawer.addDrawerListener(new DrawerLayout.DrawerListener() {
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                mClickReadCatalogFragment.highLightPageSection(mClickReadFragment.getCurrentPage());
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                if (mCurGoPage != null) {
+                    mClickReadFragment.scrollToPage(mCurGoPage);
+                    mCurGoPage = null;
+                }
+
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState) {
+
+            }
+        });
     }
 
     @Override
@@ -77,11 +107,17 @@ public class ClickReadActivity extends AppCompatActivity
     }
 
     @Override
+    public void onBuyResult(boolean isBought) {
+        if (mClickReadCatalogFragment != null && isBought) {
+            mClickReadCatalogFragment.buySuccess();
+        }
+    }
+
+    @Override
     public void onCatalogClick() {
         if (mDrawer != null) {
             mDrawer.openDrawer(Gravity.LEFT);
         }
-//
     }
 
     @Override
@@ -111,19 +147,29 @@ public class ClickReadActivity extends AppCompatActivity
                     mClickReadCatalogFragment.buySuccess();
                 }
                 break;
-            case "notifyDownloadStatus":
-                if (mClickReadCatalogFragment != null) {
-                    mClickReadCatalogFragment.renderDownloadStatus(intent.getStringExtra("status"));
-                }
-                break;
             case "notifyDownloadStatusChanged":
                 if (mClickReadCatalogFragment != null) {
                     mClickReadCatalogFragment.getAndRenderDownloadStatus();
                 }
                 break;
+            case "userHasChanged":
+                if (mClickReadFragment != null) {
+                    mClickReadFragment.userHasChanged();
+                }
+                break;
             default:
                 break;
         }
+    }
+
+    @Override
+    public void goSectionPage(ClickReadPage page) {
+        moveClickReadFragment();
+        this.mCurGoPage = page;
+    }
+
+    public void moveClickReadFragment() {
+        mDrawer.closeDrawer(Gravity.LEFT);
     }
 
     class MyRunnable implements Runnable {

@@ -56,6 +56,10 @@ public class ClickReadPagerAdapter extends PagerAdapter {
         }
     }
 
+    public int getPosition(ClickReadPage page) {
+        return mPages.indexOf(page);
+    }
+
     public void setOnBuyClickListener(View.OnClickListener listener) {
         this.mOnBuyClickListener = listener;
     }

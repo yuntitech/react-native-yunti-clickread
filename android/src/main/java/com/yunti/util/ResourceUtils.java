@@ -4,6 +4,7 @@ package com.yunti.util;
 import android.content.Context;
 import android.text.TextUtils;
 
+import com.yunti.clickread.FetchInfo;
 import com.yunti.clickread.Utils;
 
 import java.io.File;
@@ -58,8 +59,9 @@ public class ResourceUtils {
 
 
     public static String getImageUrl(Long resId, String resIdSign) {
-        return getHost()
-                + String.format("/resourceservice/mediaplay.do?resId=%1$s&resIdSign=%2$s&mediaType=%3$s", resId, resIdSign, 4);
+        return FetchInfo.HOST +
+                String.format("/resourceservice/mediaplay.do?resId=%1$s&resIdSign=%2$s&mediaType=%3$s",
+                        resId, resIdSign, 4);
     }
 
     private static String getClickReadDir(Context context, long userId, long crId) {
@@ -72,16 +74,6 @@ public class ResourceUtils {
             }
         }
         return null;
-    }
-
-    public static String getTrackUrl(Long resId, String resIdSign) {
-        return getHost()
-                + String.format("/resourceservice/mediaplay.do?resId=%1$s&resIdSign=%2$s&mediaType=%3$s", resId, resIdSign, 3);
-    }
-
-
-    private static String getHost() {
-        return "http://app.bookln.cn";
     }
 
 }

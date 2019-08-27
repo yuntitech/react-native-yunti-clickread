@@ -155,6 +155,7 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
                             new YTApi.Callback<ResPlayDTO>() {
                                 @Override
                                 public void onFailure(int code, String errorMsg) {
+                                    mPlayTrackInfo = null;
                                 }
 
                                 @Override

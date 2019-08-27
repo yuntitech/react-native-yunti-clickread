@@ -268,9 +268,10 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
             mCatalogView.highLightCurSection(section.getPages().get(0));
             goCatalogSectionPage(section.getPages().get(0));
         } else {
-            RNYtClickreadModule.alert(getActivity(), (dialog, which) -> {
-                RNYtClickreadModule.openOrderHomeScreen(mClickReadDTO, getContext());
-            });
+            RNYtClickreadModule.alert(this,
+                    (dialog, which) ->
+                            RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getContext()),
+                    R.string.tip_view_clickread_after_pay);
         }
     }
 
@@ -342,7 +343,7 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
                         }
 
                     }
-                });
+                }, this);
     }
 
     private String getClickReadDir() {
