@@ -69,7 +69,7 @@ public class ThumbnailAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onViewRecycled(RecyclerView.ViewHolder holder) {
-//        Glide.clear(((ThumbnailViewHolder) holder).mIvThumbnial);
+        Glide.with(mContext).clear(((ThumbnailViewHolder) holder).mIvThumbnial);
     }
 
     public ClickReadPage getItem(int position) {

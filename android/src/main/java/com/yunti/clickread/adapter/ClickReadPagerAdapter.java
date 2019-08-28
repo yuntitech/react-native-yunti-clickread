@@ -1,7 +1,6 @@
 package com.yunti.clickread.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -11,6 +10,8 @@ import androidx.viewpager.widget.ViewPager;
 import com.yt.ytdeep.client.dto.ClickReadPage;
 import com.yt.ytdeep.client.dto.ClickReadTrackinfo;
 import com.yunti.clickread.widget.ClickReadPageView;
+import com.yunti.clickread.widget.JazzyViewPager;
+import com.yunti.clickread.widget.OutlineContainer;
 
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -23,6 +24,7 @@ import java.util.List;
 
 public class ClickReadPagerAdapter extends PagerAdapter {
 
+    private JazzyViewPager mJazzy;
     private List<ClickReadPage> mPages;
     private Context mContext;
     private View.OnClickListener mOnBuyClickListener;
@@ -31,8 +33,9 @@ public class ClickReadPagerAdapter extends PagerAdapter {
     public final static String TAG_VIEW = "pager_view_";
     public final static String TAG_BUY_VIEW = "pager_buy_view";
 
-    public ClickReadPagerAdapter(Context context) {
+    public ClickReadPagerAdapter(Context context, JazzyViewPager jazzy) {
         this.mContext = context;
+        this.mJazzy = jazzy;
     }
 
     public void setData(List<ClickReadPage> pages) {
@@ -101,6 +104,7 @@ public class ClickReadPagerAdapter extends PagerAdapter {
         }
         container.addView(pageView, ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
+        mJazzy.setObjectForPosition(pageView, position);
         pageView.setTag(TAG_VIEW + position);
         //-1购买页
         if (Long.valueOf(-1L).equals(clickReadPage.getId())) {
@@ -123,11 +127,17 @@ public class ClickReadPagerAdapter extends PagerAdapter {
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object obj) {
-        container.removeView((View) obj);
+        ClickReadPageView pageView = (ClickReadPageView) mJazzy.findViewFromObject(position);
+        pageView.clearBitmap();
+        container.removeView(pageView);
     }
 
     @Override
     public boolean isViewFromObject(View view, Object object) {
-        return view == object;
+        if (view instanceof OutlineContainer) {
+            return ((OutlineContainer) view).getChildAt(0) == object;
+        } else {
+            return view == object;
+        }
     }
 }

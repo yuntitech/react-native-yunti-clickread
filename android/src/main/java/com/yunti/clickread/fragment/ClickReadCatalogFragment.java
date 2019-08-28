@@ -67,7 +67,6 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
         @Override
         public boolean handleMessage(Message message) {
             String clickReadDir = getClickReadDir();
-            Log.d("##", "progress handleMessage ... ");
             if (clickReadDir != null) {
                 mHandler.sendEmptyMessageDelayed(1, 1000);
                 File clickReadFile = new File(clickReadDir);
@@ -145,7 +144,7 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
                 text = "已暂停";
                 break;
             case "downloaded":
-                text = Utils.format("删除离线包（${size}）",
+                text = Utils.format("删除离线包（%s）",
                         Utils.fileSize(mClickReadDTO.getLength(), this));
                 break;
             case "updateAvailable":

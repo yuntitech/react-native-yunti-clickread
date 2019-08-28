@@ -31,6 +31,7 @@ import com.yunti.clickread.adapter.ClickReadPagerAdapter;
 import com.yunti.clickread.widget.ClickReadPageView;
 import com.yunti.clickread.widget.ClickReadThumbnailList;
 import com.yunti.clickread.widget.ClickReadTitleBar;
+import com.yunti.clickread.widget.JazzyViewPager;
 import com.yunti.clickread.widget.JoinBookShelfButton;
 import com.yunti.view.SnappingRecyclerView;
 
@@ -49,7 +50,7 @@ public class ClickReadFragment extends Fragment implements
     private ClickReadThumbnailList mClickReadThumbnailList;
     private ImageButton mPlayTracks;
     private TextView mPage;
-    private ViewPager mViewPager;
+    private JazzyViewPager mViewPager;
     private ClickReadPagerAdapter mPagerAdapter;
     private PlayerManager mPlayerManager;
     private TextView mLoading;
@@ -109,7 +110,7 @@ public class ClickReadFragment extends Fragment implements
                              @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_click_read, container, false);
         mLoading = (TextView) rootView.findViewById(R.id.tv_loading);
-        mViewPager = (ViewPager) rootView.findViewById(R.id.view_paper);
+        mViewPager = (JazzyViewPager) rootView.findViewById(R.id.view_paper);
         mClickReadThumbnailList = rootView.findViewById(R.id.layout_bottom_bar);
         mClickReadThumbnailList.setDelegate(this);
         mJoinBookShelfButton = rootView.findViewById(R.id.layout_add_to_book_shelf);
@@ -117,7 +118,7 @@ public class ClickReadFragment extends Fragment implements
         mPage = rootView.findViewById(R.id.tv_page_index);
         mPlayTracks = rootView.findViewById(R.id.btn_play_tracks);
         mPlayTracks.setOnClickListener(this);
-        mPagerAdapter = new ClickReadPagerAdapter(getContext());
+        mPagerAdapter = new ClickReadPagerAdapter(getContext(), mViewPager);
         mPagerAdapter.setPageViewDelegate(this);
         mPagerAdapter.setOnBuyClickListener(this);
         mViewPager.setAdapter(mPagerAdapter);
@@ -321,7 +322,7 @@ public class ClickReadFragment extends Fragment implements
     public void onSelected(View view, int position) {
         mClickReadThumbnailList.setSmoothScroll(true);
         isScrollByThumbnail = true;
-        mViewPager.setCurrentItem(position);
+        mViewPager.setCurrentItem(position, false);
     }
 
     @Override
@@ -584,8 +585,8 @@ public class ClickReadFragment extends Fragment implements
                                 int index = Integer.parseInt(result);
                                 mRestorePageIndex = true;
                                 mViewPager.setCurrentItem(index, false);
-                                mViewPager.postDelayed(() -> mClickReadThumbnailList.scrollToPosition(index),
-                                        600);
+                                mViewPager.postDelayed(() -> mClickReadThumbnailList.smoothScrollToPosition(index),
+                                        1000);
                             }
                         }
                     }, this);

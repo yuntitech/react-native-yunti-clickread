@@ -435,6 +435,7 @@ public class ClickReadPageView extends RelativeLayout {
 
     public void clearBitmap() {
         if (mImgTarget == null) return;
+        Glide.with(mContext).clear(mImgTarget);
     }
 
     public interface ClickReadPageViewDelegate {
