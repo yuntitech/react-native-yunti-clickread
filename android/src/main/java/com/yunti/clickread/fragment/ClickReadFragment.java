@@ -191,7 +191,6 @@ public class ClickReadFragment extends Fragment implements
                             return;
                         }
                         isBought = response.isBuySuccess();
-                        isBought = true;
                         if (isBought) {
                             buySuccess();
                             if (mDelegate != null) {
