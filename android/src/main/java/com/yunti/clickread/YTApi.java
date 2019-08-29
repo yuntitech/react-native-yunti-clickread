@@ -1,8 +1,8 @@
 package com.yunti.clickread;
 
 import android.content.Context;
+import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.fragment.app.Fragment;
 
@@ -11,17 +11,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.cqtouch.tool.MD5Util;
 import com.facebook.react.modules.network.OkHttpClientProvider;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import okhttp3.Call;
-import okhttp3.FormBody;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -39,20 +34,22 @@ public class YTApi {
 
     public static <T> void loadCacheAndFetch(FetchInfo.FetchInfoParams params, Callback<T> callback,
                                              Fragment fragment) {
-        String responseData = getApiCache(params, fragment);
-        String ldv = null;
-        if (!TextUtils.isEmpty(responseData)) {
-            JSONObject responseObject = JSON.parseObject(responseData);
-            ldv = responseObject.getString("ldv");
-            boolean success = responseObject.getBoolean("success");
-            if (success) {
-                String data = responseObject.getString("data");
-                T result = (T) JSON.parseObject(data, params.getClazz());
-                runOnUiThread(() -> callback.onResponse(API_CODE_CACHE, result), fragment);
+        OkHttpClientProvider.getOkHttpClient().dispatcher().executorService().submit(() -> {
+            String responseData = getApiCache(params, fragment);
+            String ldv = null;
+            if (!TextUtils.isEmpty(responseData)) {
+                JSONObject responseObject = JSON.parseObject(responseData);
+                ldv = responseObject.getString("ldv");
+                boolean success = responseObject.getBoolean("success");
+                if (success) {
+                    String data = responseObject.getString("data");
+                    T result = (T) JSON.parseObject(data, params.getClazz());
+                    runOnUiThread(() -> callback.onResponse(API_CODE_CACHE, result), fragment);
+                }
             }
-        }
-        params.addLdv(ldv);
-        fetch(params, callback, fragment);
+            params.addLdv(ldv);
+            fetch(params, callback, fragment);
+        });
     }
 
     public static <T> void loadCache(FetchInfo.FetchInfoParams params, Callback<T> callback,
@@ -83,36 +80,60 @@ public class YTApi {
                 .post(params.getFormBody())
                 .url(params.getUrl())
                 .build();
-        OkHttpClientProvider.getOkHttpClient().newCall(request).enqueue(new okhttp3.Callback() {
+        //当前为主线程
+        if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
+            OkHttpClientProvider.getOkHttpClient().newCall(request).enqueue(new okhttp3.Callback() {
 
-            @Override
-            public void onFailure(Call call, IOException e) {
-                if (callback != null) {
-                    runOnUiThread(() -> callback.onFailure(API_CODE_NET, e.getMessage()), fragment);
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    onFetchFailure(e, callback, fragment);
                 }
-            }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    throw new IOException("Unexpected code " + response);
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    onFetchResponse(response, params, callback, fragment);
                 }
-                String responseData = response.body().string();
-                JSONObject responseObject = JSON.parseObject(responseData);
-                boolean success = responseObject.getBoolean("success");
-                if (success) {
-                    if (callback != null) {
-                        String data = responseObject.getString("data");
-                        T result = (T) JSON.parseObject(data, params.getClazz());
-                        runOnUiThread(() -> callback.onResponse(API_CODE_NET, result), fragment);
-                    }
-                    String ldv = MD5Util.MD5(responseData);
-                    saveApiCacheIfNeeded(params, responseObject, ldv, fragment);
-                } else {
-                    onFailure(call, new IOException(responseObject.getString("msg")));
-                }
+            });
+        }
+        //其他线程
+        else {
+            try {
+                Response response = OkHttpClientProvider.getOkHttpClient().newCall(request).execute();
+                onFetchResponse(response, params, callback, fragment);
+            } catch (IOException e) {
+                e.printStackTrace();
+                onFetchFailure(e, callback, fragment);
             }
-        });
+        }
+
+    }
+
+    private static <T> void onFetchFailure(IOException e, Callback<T> callback, Fragment fragment) {
+        if (callback != null) {
+            runOnUiThread(() -> callback.onFailure(API_CODE_NET, e.getMessage()), fragment);
+        }
+    }
+
+    private static <T> void onFetchResponse(Response response,
+                                            FetchInfo.FetchInfoParams params,
+                                            Callback<T> callback, Fragment fragment) throws IOException {
+        if (!response.isSuccessful()) {
+            throw new IOException("Unexpected code " + response);
+        }
+        String responseData = response.body().string();
+        JSONObject responseObject = JSON.parseObject(responseData);
+        boolean success = responseObject.getBoolean("success");
+        if (success) {
+            if (callback != null) {
+                String data = responseObject.getString("data");
+                T result = (T) JSON.parseObject(data, params.getClazz());
+                runOnUiThread(() -> callback.onResponse(API_CODE_NET, result), fragment);
+            }
+            String ldv = MD5Util.MD5(responseData);
+            saveApiCacheIfNeeded(params, responseObject, ldv, fragment);
+        } else {
+            onFetchFailure(new IOException(responseObject.getString("msg")), callback, fragment);
+        }
     }
 
     private static String getApiCache(FetchInfo.FetchInfoParams infoParams, Fragment fragment) {
@@ -150,7 +171,6 @@ public class YTApi {
             String filePath = getApiCacheFilePath(infoParams, context);
             FileUtils.write(new File(filePath), responseObject.toJSONString(), false);
         } catch (Exception e) {
-            Log.d("##", e.getMessage());
             e.printStackTrace();
         }
     }
