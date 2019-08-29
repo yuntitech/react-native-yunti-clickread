@@ -557,6 +557,10 @@ public class ClickReadFragment extends Fragment implements
 
     @Override
     public void joinBookShelf() {
+        if (FetchInfo.isGuest()) {
+            RNYtClickreadModule.guestAlert(this);
+            return;
+        }
         YTApi.fetch(FetchInfo.joinBookShelf(getBookId()), new YTApi.Callback<BaseType>() {
             @Override
             public void onFailure(int code, String errorMsg) {
