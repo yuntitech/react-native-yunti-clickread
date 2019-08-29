@@ -57,21 +57,24 @@ public class YTApi {
 
     public static <T> void loadCache(FetchInfo.FetchInfoParams params, Callback<T> callback,
                                      Fragment fragment) {
-        String responseData = getApiCache(params, fragment);
-        if (!TextUtils.isEmpty(responseData)) {
-            JSONObject responseObject = JSON.parseObject(responseData);
-            boolean success = responseObject.getBoolean("success");
-            if (success) {
-                String data = responseObject.getString("data");
-                T result = (T) JSON.parseObject(data, params.getClazz());
-                runOnUiThread(() -> callback.onResponse(API_CODE_CACHE, result), fragment);
+        OkHttpClientProvider.getOkHttpClient().dispatcher().executorService().submit(() -> {
+            String responseData = getApiCache(params, fragment);
+            if (!TextUtils.isEmpty(responseData)) {
+                JSONObject responseObject = JSON.parseObject(responseData);
+                boolean success = responseObject.getBoolean("success");
+                if (success) {
+                    String data = responseObject.getString("data");
+                    T result = (T) JSON.parseObject(data, params.getClazz());
+                    runOnUiThread(() -> callback.onResponse(API_CODE_CACHE, result), fragment);
+                } else {
+                    String msg = responseObject.getString("msg");
+                    runOnUiThread(() -> callback.onFailure(API_CODE_CACHE, msg), fragment);
+                }
             } else {
-                String msg = responseObject.getString("msg");
-                runOnUiThread(() -> callback.onFailure(API_CODE_CACHE, msg), fragment);
+                runOnUiThread(() -> callback.onFailure(API_CODE_CACHE, "empty data "), fragment);
             }
-        } else {
-            runOnUiThread(() -> callback.onFailure(API_CODE_CACHE, "empty data "), fragment);
-        }
+        });
+
     }
 
     public static <T> void fetch(FetchInfo.FetchInfoParams params, Callback<T> callback,
