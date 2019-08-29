@@ -94,6 +94,11 @@ public class ClickReadActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
     protected void onDestroy() {
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .unregisterReceiver(mBroadcastReceiver);
@@ -156,6 +161,12 @@ public class ClickReadActivity extends AppCompatActivity
             case "userHasChanged":
                 if (mClickReadFragment != null) {
                     mClickReadFragment.userHasChanged();
+                }
+                break;
+            case "notifyDownloadTotalFileCount":
+                if (mClickReadCatalogFragment != null) {
+                    long totalFileCount = intent.getLongExtra("totalFileCount", 0);
+                    mClickReadCatalogFragment.setTotalFileCount(totalFileCount);
                 }
                 break;
             default:

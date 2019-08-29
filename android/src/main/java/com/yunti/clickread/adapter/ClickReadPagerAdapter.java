@@ -29,7 +29,6 @@ public class ClickReadPagerAdapter extends PagerAdapter {
     private Context mContext;
     private View.OnClickListener mOnBuyClickListener;
     private ClickReadPageView.ClickReadPageViewDelegate mPageViewDelegate;
-    private ClickReadPageView.ImageLoadListener mImageLoadListener;
     public final static String TAG_VIEW = "pager_view_";
     public final static String TAG_BUY_VIEW = "pager_buy_view";
 
@@ -71,10 +70,6 @@ public class ClickReadPagerAdapter extends PagerAdapter {
         mPageViewDelegate = pageViewDelegate;
     }
 
-    public void setImageLoadListener(ClickReadPageView.ImageLoadListener listener) {
-        this.mImageLoadListener = listener;
-    }
-
     public ClickReadPage getItem(int position) {
         if (CollectionUtils.isEmpty(mPages) || position < 0) {
             return null;
@@ -98,9 +93,6 @@ public class ClickReadPagerAdapter extends PagerAdapter {
         ClickReadPageView pageView = new ClickReadPageView(mContext);
         if (mPageViewDelegate != null) {
             pageView.setDelegate(mPageViewDelegate);
-        }
-        if (mImageLoadListener != null) {
-            pageView.setImageLoadListener(mImageLoadListener);
         }
         container.addView(pageView, ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);

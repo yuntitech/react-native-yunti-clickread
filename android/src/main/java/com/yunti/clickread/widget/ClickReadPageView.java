@@ -64,7 +64,6 @@ public class ClickReadPageView extends RelativeLayout {
     private PhotoViewAttacher mAttacher;
     private RectF mCurFrame;
     private ClickReadPageViewDelegate mDelegate;
-    private ImageLoadListener mImageLoadListener;
     private final static int TITLE_BAR_HEIGHT = 64;
     private final static int MENU_BOTTOM_HEIGHT = 62;
     private int offsetTop;
@@ -91,10 +90,6 @@ public class ClickReadPageView extends RelativeLayout {
 
     public void setDelegate(ClickReadPageViewDelegate delegate) {
         mDelegate = delegate;
-    }
-
-    public void setImageLoadListener(ImageLoadListener listener) {
-        this.mImageLoadListener = listener;
     }
 
     public void refreshPage() {
@@ -316,8 +311,8 @@ public class ClickReadPageView extends RelativeLayout {
         mLayoutLoad.setVisibility(VISIBLE);
         mNetWorkErrorTips.setText("图片加载失败");
         isLoadImageSuccess = false;
-        if (mImageLoadListener != null) {
-            mImageLoadListener.loadFail(position);
+        if (mDelegate != null) {
+            mDelegate.onImageLoadFail(position);
         }
     }
 
@@ -329,8 +324,8 @@ public class ClickReadPageView extends RelativeLayout {
             splashClickArea();
         }
         isLoadImageSuccess = true;
-        if (mImageLoadListener != null) {
-            mImageLoadListener.loadSuccess(position);
+        if (mDelegate != null) {
+            mDelegate.onImageLoadSuccess(position);
         }
     }
 
@@ -356,6 +351,7 @@ public class ClickReadPageView extends RelativeLayout {
             @Override
             public void onLoadFailed(@Nullable Drawable errorDrawable) {
                 super.onLoadFailed(errorDrawable);
+                showLoadFail();
             }
 
             @Override
@@ -384,7 +380,6 @@ public class ClickReadPageView extends RelativeLayout {
     }
 
     public void renderBuyBookTips(String authVal, OnClickListener listener) {
-        Log.d("##", "renderBuyBookTips ");
         ClickReadBookBuyTipsView tipsView = new ClickReadBookBuyTipsView(mContext);
         tipsView.setId(R.id.view_buy_book);
         tipsView.setOnClickListener(listener);
@@ -447,12 +442,10 @@ public class ClickReadPageView extends RelativeLayout {
         void onClickOtherArea();
 
         long getClickReadId();
-    }
 
-    public interface ImageLoadListener {
-        void loadSuccess(int position);
+        void onImageLoadSuccess(int position);
 
-        void loadFail(int position);
+        void onImageLoadFail(int position);
     }
 
 }

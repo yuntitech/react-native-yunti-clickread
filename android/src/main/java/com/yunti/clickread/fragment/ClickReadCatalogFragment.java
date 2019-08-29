@@ -1,9 +1,11 @@
 package com.yunti.clickread.fragment;
 
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
+import android.os.HandlerThread;
+import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,6 +23,7 @@ import com.badoo.mobile.util.WeakHandler;
 import com.yt.ytdeep.client.dto.ClickReadCatalogDTO;
 import com.yt.ytdeep.client.dto.ClickReadDTO;
 import com.yt.ytdeep.client.dto.ClickReadPage;
+import com.yt.ytdeep.client.dto.ClickReadTrackinfo;
 import com.yunti.clickread.FetchInfo;
 import com.yunti.clickread.R;
 import com.yunti.clickread.RNYtClickreadModule;
@@ -28,11 +31,11 @@ import com.yunti.clickread.Utils;
 import com.yunti.clickread.adapter.ClickReadCatalogAdapter;
 import com.yunti.clickread.widget.ClickReadCatalogView;
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Administrator on 2016/10/9 0009.
@@ -42,17 +45,17 @@ import java.util.Map;
 
 public class ClickReadCatalogFragment extends Fragment implements ClickReadCatalogView.OperationCallback,
         View.OnClickListener, ClickReadCatalogAdapter.OnSectionItemClickListener {
-    private Long mBookId;
     private OperationCallback mCallback;
     private ClickReadCatalogView mCatalogView;
     private Button mBtnCacheWholeBook;
     private ClickReadPage mCurGoPage;
     private TextView mDownloadLoadingProgress;
     private ClickReadDTO mClickReadDTO;
-    private long mSizeOfDirectory;
-    private long time;
     private ClickReadCatalogFragmentDelegate mDelegate;
     private String mDownloadStatus;
+    private WeakHandler mProgressHandler;
+    private HandlerThread mHandlerThread;
+    private long mTotalFileCount = 0;
 
     public void setDelegate(ClickReadCatalogFragmentDelegate delegate) {
         mDelegate = delegate;
@@ -63,41 +66,31 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
     }
 
 
-    private WeakHandler mHandler = new WeakHandler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(Message message) {
-            String clickReadDir = getClickReadDir();
-            if (clickReadDir != null) {
-                mHandler.sendEmptyMessageDelayed(1, 1000);
-                File clickReadFile = new File(clickReadDir);
-                if (!clickReadFile.exists()) {
-                    return false;
-                }
-                long sizeOfDirectory = FileUtils.sizeOfDirectory(clickReadFile);
-                if (mSizeOfDirectory != sizeOfDirectory) {
-                    mSizeOfDirectory = sizeOfDirectory;
-                    String costTime = "";
-                    if (time > 0) {
-                        costTime = " 目录大小改变耗时: " + (System.currentTimeMillis() - time);
-                    }
-                    Log.d("##", "sizeOfDirectory is "
-                            + Formatter.formatFileSize(getContext(), mSizeOfDirectory)
-                            + costTime);
-                    time = System.currentTimeMillis();
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> {
-                            mBtnCacheWholeBook.setText(String.format("下载中 ( %s / %s)",
-                                    Formatter.formatFileSize(getContext(), mSizeOfDirectory),
-                                    Formatter.formatFileSize(getContext(), mClickReadDTO.getLength())));
-                        });
-                    }
-                }
-
-            }
+    private Handler.Callback mProgressCallback = msg -> {
+        long currentFileCount;
+        if (msg.what == 2) {
+            calculateTotalFileCount();
+            currentFileCount = getCurrentFileCount();
+            runOnUiThread(() -> renderProgress(currentFileCount));
             return false;
         }
-    });
+        String clickReadDir = getClickReadDir();
+        if (clickReadDir != null) {
+            mProgressHandler.sendEmptyMessageDelayed(1, 1000);
+            File clickReadFile = new File(clickReadDir);
+            if (!clickReadFile.exists()) {
+                return false;
+            }
+            currentFileCount = getCurrentFileCount();
+            runOnUiThread(() -> renderProgress(currentFileCount));
+        }
+        return false;
+    };
 
+    public void setTotalFileCount(long totalFileCount) {
+        mTotalFileCount = totalFileCount;
+        renderProgress(getCurrentFileCount());
+    }
 
     private String formatProgress(float progress) {
         StringBuffer sb = new StringBuffer();
@@ -123,29 +116,23 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
                 !ClickReadDTO.CLICKREAD_AUTHTYPE_NEED_BUY.equals(clickReadDTO.getAuthType()));
         renderDownloadStatus(null);
         getAndRenderDownloadStatus();
+        mProgressHandler.sendEmptyMessage(2);
     }
 
-    public void renderDownloadStatus(String status) {
+    private void renderDownloadStatus(String status) {
         mDownloadStatus = status != null ? status : "";
-        String text;
+        String text = "下载离线包";
+        String length;
         switch (mDownloadStatus) {
             case "downloading":
-                File clickReadFile = new File(getClickReadDir());
-                if (clickReadFile.exists()) {
-                    mSizeOfDirectory = FileUtils.sizeOfDirectory(clickReadFile);
-                } else {
-                    mSizeOfDirectory = 0;
-                }
-                text = String.format("下载中 ( %s / %s)",
-                        Utils.fileSize(mSizeOfDirectory, this),
-                        Utils.fileSize(mClickReadDTO.getLength(), this));
+                renderProgress(getCurrentFileCount());
                 break;
             case "paused":
                 text = "已暂停";
                 break;
             case "downloaded":
-                text = Utils.format("删除离线包（%s）",
-                        Utils.fileSize(mClickReadDTO.getLength(), this));
+                length = Utils.fileSize(mClickReadDTO.getLength(), this);
+                text = Utils.format("删除离线包%s", length != null ? "（" + length + "）" : "");
                 break;
             case "updateAvailable":
                 text = "更新";
@@ -154,8 +141,8 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
                 text = "下载失败";
                 break;
             default:
-                text = Utils.format("下载离线包（%s）",
-                        Utils.fileSize(mClickReadDTO.getLength(), this));
+                length = Utils.fileSize(mClickReadDTO.getLength(), this);
+                text = Utils.format("下载离线包%s", length != null ? "（" + length + "）" : "");
                 break;
         }
         mBtnCacheWholeBook.setText(text);
@@ -165,11 +152,19 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mHandlerThread = new HandlerThread("DownloadProgressThread");
+        mHandlerThread.start();
+        mProgressHandler = new WeakHandler(mHandlerThread.getLooper(), mProgressCallback);
     }
 
     @Override
     public void onDestroy() {
-        mHandler.removeMessages(1);
+        mProgressHandler.removeMessages(1);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            mHandlerThread.quitSafely();
+        } else {
+            mHandlerThread.quit();
+        }
         super.onDestroy();
     }
 
@@ -202,13 +197,17 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
     public void onClick(View view) {
         int viewId = view.getId();
         //下载
-        if (viewId == R.id.btn_cache_whole_book && mDownloadStatus != null) {
+        if (viewId == R.id.btn_cache_whole_book) {
             onPressDownload();
         }
     }
 
     private void onPressDownload() {
-        if (mDownloadStatus == null) {
+        if (mDelegate == null || mDownloadStatus == null) {
+            return;
+        }
+        if (!mDelegate.isBought()) {
+            buyAlert();
             return;
         }
         switch (mDownloadStatus) {
@@ -258,6 +257,16 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
         }
     }
 
+    private void buyAlert() {
+        RNYtClickreadModule.alert(this, (dialog, which) -> {
+            if (FetchInfo.isGuest()) {
+                RNYtClickreadModule.guestAlert(this);
+            } else {
+                RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getContext());
+            }
+        }, "购买后即可下载", "购买");
+    }
+
     @Override
     public void onSectionClick(ClickReadCatalogDTO section) {
         if (mDelegate == null) {
@@ -275,23 +284,23 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
     }
 
     private void startDownload() {
-        mHandler.removeMessages(1);
+        mProgressHandler.removeMessages(1);
         RNYtClickreadModule.download(getContext(), mClickReadDTO);
     }
 
     private void pauseDownload() {
-        mHandler.removeMessages(1);
+        mProgressHandler.removeMessages(1);
         RNYtClickreadModule.pauseDownload(getContext(), mClickReadDTO.getId());
     }
 
     private void removeDownload() {
-        mHandler.removeMessages(1);
+        mProgressHandler.removeMessages(1);
         RNYtClickreadModule.removeDownload(getContext(), mClickReadDTO.getId());
     }
 
     private void sendProgressMessage() {
-        mHandler.removeMessages(1);
-        mHandler.sendEmptyMessage(1);
+        mProgressHandler.removeMessages(1);
+        mProgressHandler.sendEmptyMessage(1);
     }
 
     public interface OperationCallback {
@@ -317,13 +326,14 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
         }
     }
 
+
     public void getAndRenderDownloadStatus() {
         RNYtClickreadModule.getStorageItem(getContext(),
                 getDownloadStatusKey(),
                 new RNYtClickreadModule.Callback() {
                     @Override
                     public void reject(String error) {
-                        mHandler.removeMessages(1);
+                        mProgressHandler.removeMessages(1);
                     }
 
                     @Override
@@ -334,7 +344,7 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
                             if ("downloading".equals(mDownloadStatus)) {
                                 sendProgressMessage();
                             } else {
-                                mHandler.removeMessages(1);
+                                mProgressHandler.removeMessages(1);
                             }
                             renderDownloadStatus(mDownloadStatus);
                         } else {
@@ -343,6 +353,78 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
 
                     }
                 }, this);
+    }
+
+    private void calculateTotalFileCount() {
+        if (mClickReadDTO != null && mClickReadDTO.getChapters() != null) {
+            mTotalFileCount = 0;
+            Set<String> urlSet = new HashSet<>();
+            for (ClickReadCatalogDTO chapter : mClickReadDTO.getChapters()) {
+                if (chapter.getSections() != null) {
+                    for (ClickReadCatalogDTO section : chapter.getSections()) {
+                        if (section.getPages() != null) {
+                            for (ClickReadPage page : section.getPages()) {
+                                String url = page.getImgUrl();
+                                if (url != null && !urlSet.contains(url)) {
+                                    mTotalFileCount++;
+                                    urlSet.add(url);
+                                }
+                                url = page.getThumbnails();
+                                if (url != null && !urlSet.contains(url)) {
+                                    mTotalFileCount++;
+                                    urlSet.add(url);
+                                }
+                                if (page.getTracks() != null) {
+                                    String trackUrl;
+                                    for (ClickReadTrackinfo trackinfo : page.getTracks()) {
+                                        trackUrl = trackinfo.getUrl();
+                                        if (trackUrl != null
+                                                && !urlSet.contains(trackUrl)
+                                                && trackUrl.startsWith("http")) {
+                                            mTotalFileCount++;
+                                            urlSet.add(trackUrl);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void runOnUiThread(Runnable runnable) {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(runnable);
+        }
+    }
+
+    private void renderProgress(long currentFileCount) {
+        //下载完成
+        if (mTotalFileCount > 0 && currentFileCount >= mTotalFileCount) {
+            mProgressHandler.removeMessages(1);
+            renderDownloadStatus("downloaded");
+            return;
+        }
+        float progress = 0;
+        if (mTotalFileCount > 0) {
+            progress = currentFileCount * 1f / mTotalFileCount * 100;
+        }
+        mBtnCacheWholeBook.setText(String.format("下载中 (%s%s)", Utils.format("%.2f", progress), "%"));
+    }
+
+    private long getCurrentFileCount() {
+        String dir = getClickReadDir();
+        if (!TextUtils.isEmpty(dir) && new File(dir).exists()) {
+            String[] resTypes = new String[]{"image", "audio", "video", "thumbnail"};
+            long fileCount = 0;
+            for (String type : resTypes) {
+                fileCount += Utils.getDirFileCount(Utils.format("%s/%s", dir, type));
+            }
+            return fileCount;
+        }
+        return 0;
     }
 
     private String getClickReadDir() {

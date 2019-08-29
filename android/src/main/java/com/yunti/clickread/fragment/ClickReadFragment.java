@@ -2,6 +2,7 @@ package com.yunti.clickread.fragment;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +39,9 @@ import com.yunti.view.SnappingRecyclerView;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class ClickReadFragment extends Fragment implements
@@ -152,7 +155,6 @@ public class ClickReadFragment extends Fragment implements
 
     @Override
     public void onResponse(int code, ClickReadDTO response) {
-        fetchIsBuy(response.getId());
         mClickReadDTO = response;
         if (mPlayerManager != null) {
             mPlayerManager.setClickReadId(response.getId());
@@ -162,10 +164,11 @@ public class ClickReadFragment extends Fragment implements
         }
         mClickReadPages = getClickReadPages(response);
         render();
+        restorePageIndex();
+        fetchIsBuy(response.getId());
         if (YTApi.API_CODE_CACHE == code) {
             YTApi.fetch(FetchInfo.queryByBookId(getBookId()), null, null);
         }
-        restorePageIndex();
     }
 
     public void userHasChanged() {
@@ -188,6 +191,7 @@ public class ClickReadFragment extends Fragment implements
                             return;
                         }
                         isBought = response.isBuySuccess();
+                        isBought = true;
                         if (isBought) {
                             buySuccess();
                             if (mDelegate != null) {
@@ -257,6 +261,20 @@ public class ClickReadFragment extends Fragment implements
     }
 
     @Override
+    public void onImageLoadSuccess(int position) {
+        if (position == mViewPager.getCurrentItem()) {
+            renderButtonEnable(true);
+        }
+    }
+
+    @Override
+    public void onImageLoadFail(int position) {
+        if (position == mViewPager.getCurrentItem()) {
+            renderButtonEnable(false);
+        }
+    }
+
+    @Override
     public void onTrackEnd() {
         ClickReadPageView pageView = getCurrentPageView();
         if (pageView != null) {
@@ -285,8 +303,9 @@ public class ClickReadFragment extends Fragment implements
 
     @Override
     public void onPageSelected(int position) {
-        refresh();
+        renderPage();
         if (!isBought && position == mPagerAdapter.getCount() - 1) {
+            renderButtonEnable(false);
             playOrPauseTracksIfPageChanged(true);
             setButtonsVisible(false);
         } else {
@@ -298,6 +317,7 @@ public class ClickReadFragment extends Fragment implements
             prevPosition = position;
             ClickReadPageView curPageView = getCurrentPageView();
             if (curPageView != null) {
+                renderButtonEnable(curPageView.isLoadImageSuccess());
                 if (isShowClickArea) {
                     curPageView.showClickArea();
                 } else {
@@ -338,9 +358,7 @@ public class ClickReadFragment extends Fragment implements
         } else if (viewId == R.id.btn_buy
                 || viewId == R.id.layout_buy_clickread_book) {
             if (FetchInfo.isGuest()) {
-                RNYtClickreadModule.alert(this,
-                        (dialog, which) -> RNYtClickreadModule.pushLoginScreen(getContext()),
-                        "您需要登录后使用该功能", "登录");
+                RNYtClickreadModule.guestAlert(this);
             } else {
                 RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getContext());
             }
@@ -387,14 +405,13 @@ public class ClickReadFragment extends Fragment implements
         return mPagerAdapter.getItem(mViewPager.getCurrentItem());
     }
 
-    private void refresh() {
-        renderPage();
+    private void renderButtonEnable(boolean enable) {
         if (CollectionUtils.isEmpty(mPagerAdapter.getTracks(mViewPager.getCurrentItem()))) {
             mTitleBar.setClickAreaEnabled(false);
             mPlayTracks.setEnabled(false);
         } else {
-            mTitleBar.setClickAreaEnabled(true);
-            mPlayTracks.setEnabled(true);
+            mTitleBar.setClickAreaEnabled(enable);
+            mPlayTracks.setEnabled(enable);
         }
     }
 
@@ -420,7 +437,7 @@ public class ClickReadFragment extends Fragment implements
                 setButtonsVisible(false);
             }
         }
-        refresh();
+        renderPage();
     }
 
 
@@ -616,5 +633,6 @@ public class ClickReadFragment extends Fragment implements
         void onCatalogClick();
 
         void onBackClick();
+
     }
 }

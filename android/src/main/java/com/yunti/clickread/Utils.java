@@ -6,6 +6,7 @@ import android.text.format.Formatter;
 
 import androidx.fragment.app.Fragment;
 
+import java.io.File;
 import java.util.Locale;
 
 public class Utils {
@@ -34,6 +35,14 @@ public class Utils {
 
     public static String format(String format, Object... args) {
         return String.format(Locale.CHINA, format, args);
+    }
+
+    public static long getDirFileCount(String dir) {
+        File file = new File(dir);
+        if (file.exists() && file.isDirectory()) {
+            return file.list().length;
+        }
+        return 0;
     }
 
     private static String fen2Yuan(float fen) {

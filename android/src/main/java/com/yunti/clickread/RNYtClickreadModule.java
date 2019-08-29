@@ -111,6 +111,14 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void notifyDownloadTotalFileCount(double count) {
+        Intent intent = new Intent(ClickReadActivity.NAME);
+        intent.putExtra("action", "notifyDownloadTotalFileCount");
+        intent.putExtra("totalFileCount", Double.valueOf(count).longValue());
+        LocalBroadcastManager.getInstance(getReactApplicationContext()).sendBroadcast(intent);
+    }
+
+    @ReactMethod
     public void userHasChanged(ReadableMap params) {
         FetchInfo.setHostAndApiCommonParameters(Arguments.toBundle(params));
         Intent intent = new Intent(ClickReadActivity.NAME);
@@ -252,6 +260,12 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
             return;
         }
         alert(fragment, positiveCallback, fragment.getString(content), "确定");
+    }
+
+    public static void guestAlert(Fragment fragment) {
+        alert(fragment,
+                (dialog, which) -> RNYtClickreadModule.pushLoginScreen(fragment.getContext()),
+                "您需要登录后使用该功能", "登录");
     }
 
     public static void alert(Fragment fragment,
