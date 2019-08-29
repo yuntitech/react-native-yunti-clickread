@@ -116,7 +116,6 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
                 !ClickReadDTO.CLICKREAD_AUTHTYPE_NEED_BUY.equals(clickReadDTO.getAuthType()));
         renderDownloadStatus(null);
         getAndRenderDownloadStatus();
-        mProgressHandler.sendEmptyMessage(2);
     }
 
     private void renderDownloadStatus(String status) {
@@ -299,6 +298,7 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
     }
 
     private void sendProgressMessage() {
+        mProgressHandler.sendEmptyMessage(2);
         mProgressHandler.removeMessages(1);
         mProgressHandler.sendEmptyMessage(1);
     }
