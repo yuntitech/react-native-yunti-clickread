@@ -12,11 +12,17 @@ import java.util.Locale;
 public class Utils {
 
 
-    public static String fileSize(long sizeBytes, Fragment fragment) {
+    public static String fileSize(Long sizeBytes, Fragment fragment) {
+        if (sizeBytes == null) {
+            return null;
+        }
         return fileSize(sizeBytes, fragment.getContext());
     }
 
-    public static String fileSize(long sizeBytes, Context context) {
+    public static String fileSize(Long sizeBytes, Context context) {
+        if (sizeBytes == null) {
+            return null;
+        }
         return Formatter.formatFileSize(context, sizeBytes);
     }
 
