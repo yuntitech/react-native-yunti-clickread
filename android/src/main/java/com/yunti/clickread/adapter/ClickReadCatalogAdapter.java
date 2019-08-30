@@ -16,6 +16,10 @@ import com.yt.ytdeep.client.dto.ClickReadCatalogDTO;
 import com.yunti.clickread.R;
 import com.yunti.clickread.RNYtClickreadModule;
 
+import org.apache.commons.collections4.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**

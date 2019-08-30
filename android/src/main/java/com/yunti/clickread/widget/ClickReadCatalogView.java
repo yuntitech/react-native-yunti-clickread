@@ -16,8 +16,10 @@ import com.yunti.clickread.adapter.ClickReadCatalogAdapter;
 import com.yunti.view.YTLinearLayout;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -80,6 +82,7 @@ public class ClickReadCatalogView extends YTLinearLayout {
             mParentCatalogIndexList.add(catalogs.size() - 1);
             if (CollectionUtils.isNotEmpty(catalog.getSections())) {
                 for (ClickReadCatalogDTO section : catalog.getSections()) {
+                    section.setAuthType(catalog.getAuthType());
                     section.setLevel(ClickReadCatalogDTO.CLICKREADCATALOG_LEVEL_SECTION);
                     if (mParentCatalogIndexList.size() > 0) {
                         section.setPid(Long.valueOf(
@@ -98,6 +101,9 @@ public class ClickReadCatalogView extends YTLinearLayout {
 
     public void buySuccess() {
         if (mAdapter != null) {
+            CollectionUtils.filterInverse(mAdapter.getCatalogs(),
+                    catalog -> ClickReadCatalogDTO.CRCODE_AUTH_CODE_BOOK_SHIDUCRCODE
+                            .equals(catalog.getAuthType()));
             mAdapter.refresh(true);
         }
     }

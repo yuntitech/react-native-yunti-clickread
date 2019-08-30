@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
@@ -30,7 +31,7 @@ public class ClickReadPagerAdapter extends PagerAdapter {
     private View.OnClickListener mOnBuyClickListener;
     private ClickReadPageView.ClickReadPageViewDelegate mPageViewDelegate;
     public final static String TAG_VIEW = "pager_view_";
-    public final static String TAG_BUY_VIEW = "pager_buy_view";
+    private String mBuyViewTag;
 
     public ClickReadPagerAdapter(Context context, JazzyViewPager jazzy) {
         this.mContext = context;
@@ -38,6 +39,9 @@ public class ClickReadPagerAdapter extends PagerAdapter {
     }
 
     public void setData(List<ClickReadPage> pages) {
+        if (mPages != null) {
+            mPages.clear();
+        }
         this.mPages = pages;
         this.notifyDataSetChanged();
     }
@@ -100,6 +104,7 @@ public class ClickReadPagerAdapter extends PagerAdapter {
         pageView.setTag(TAG_VIEW + position);
         //-1购买页
         if (Long.valueOf(-1L).equals(clickReadPage.getId())) {
+            mBuyViewTag = TAG_VIEW + position;
             pageView.renderBuyBookTips(clickReadPage.getAuthVal(),
                     mOnBuyClickListener);
         } else {
@@ -108,18 +113,9 @@ public class ClickReadPagerAdapter extends PagerAdapter {
         return pageView;
     }
 
-
-    public void refreshBookBuyTipsView(ViewPager viewPager, int position) {
-        ClickReadPageView pageView = viewPager.findViewWithTag(TAG_VIEW + position);
-        if (pageView != null) {
-            pageView.refreshBookBuyTipsView();
-            pageView.setBookPage(getItem(position), position);
-        }
-    }
-
     @Override
     public void destroyItem(ViewGroup container, int position, Object obj) {
-        ClickReadPageView pageView = (ClickReadPageView) mJazzy.findViewFromObject(position);
+        ClickReadPageView pageView = (ClickReadPageView) obj;
         pageView.clearBitmap();
         container.removeView(pageView);
     }
@@ -132,4 +128,16 @@ public class ClickReadPagerAdapter extends PagerAdapter {
             return view == object;
         }
     }
+
+    @Override
+    public int getItemPosition(@NonNull Object object) {
+        ClickReadPageView pageView = (ClickReadPageView) object;
+        if ((TAG_VIEW + 0).equals(pageView.getTag())
+                || (mBuyViewTag != null && mBuyViewTag.equals(pageView.getTag()))
+        ) {
+            return PagerAdapter.POSITION_NONE;
+        }
+        return PagerAdapter.POSITION_UNCHANGED;
+    }
+
 }

@@ -149,9 +149,6 @@ public class ClickReadActivity extends AppCompatActivity
                 if (mClickReadFragment != null) {
                     mClickReadFragment.buySuccess();
                 }
-                if (mClickReadCatalogFragment != null) {
-                    mClickReadCatalogFragment.buySuccess();
-                }
                 break;
             case "notifyDownloadStatusChanged":
                 if (mClickReadCatalogFragment != null) {

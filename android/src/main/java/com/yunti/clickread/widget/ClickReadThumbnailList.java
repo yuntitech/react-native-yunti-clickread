@@ -3,9 +3,12 @@ package com.yunti.clickread.widget;
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.badoo.mobile.util.WeakHandler;
 import com.yt.ytdeep.client.dto.ClickReadPage;
 import com.yunti.clickread.R;
 import com.yunti.clickread.adapter.ThumbnailAdapter;
@@ -30,6 +33,10 @@ public class ClickReadThumbnailList extends YTRelativeLayout {
     private ThumbnailAdapter mThumbnailAdapter;
     private boolean mIsShowMenuBar = true;
     private ClickReadThumbnailListDelegate mDelegate;
+    private WeakHandler mHandler = new WeakHandler(msg -> {
+        hide();
+        return false;
+    });
 
     public void setDelegate(ClickReadThumbnailListDelegate delegate) {
         mDelegate = delegate;
@@ -91,6 +98,10 @@ public class ClickReadThumbnailList extends YTRelativeLayout {
     }
 
     public void hide() {
+        if (!mIsShowMenuBar) {
+            return;
+        }
+        mHandler.removeMessages(1);
         mIsShowMenuBar = false;
         AnimatorSet set = new AnimatorSet();
         List<Animator> animators = new ArrayList<>();
@@ -106,6 +117,7 @@ public class ClickReadThumbnailList extends YTRelativeLayout {
     }
 
     public void show() {
+        hideDelay();
         mIsShowMenuBar = true;
         AnimatorSet set = new AnimatorSet();
         List<Animator> animators = new ArrayList<>();
@@ -118,6 +130,11 @@ public class ClickReadThumbnailList extends YTRelativeLayout {
         }
         set.playTogether(animators);
         set.setDuration(300).start();
+    }
+
+    public void hideDelay() {
+        mHandler.removeMessages(1);
+        mHandler.sendEmptyMessageDelayed(1, 5000);
     }
 
     private View getPlayTracksView() {

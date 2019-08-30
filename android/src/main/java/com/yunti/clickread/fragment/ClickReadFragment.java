@@ -2,7 +2,6 @@ package com.yunti.clickread.fragment;
 
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -191,9 +190,6 @@ public class ClickReadFragment extends Fragment implements
                         isBought = response.isBuySuccess();
                         if (isBought) {
                             buySuccess();
-                            if (mDelegate != null) {
-                                mDelegate.onBuyResult(isBought);
-                            }
                         }
                     }
                 }, this);
@@ -373,21 +369,18 @@ public class ClickReadFragment extends Fragment implements
         isBought = true;
         mTitleBar.setBuyButtonVisible(false);
         if (CollectionUtils.isNotEmpty(mClickReadPages)) {
-            renderPage();
             setButtonsVisible(true);
-            ClickReadPage fakePage = mPagerAdapter.getItem(mFreeEndPageIndex);
-            if (fakePage != null
-                    && Long.valueOf(-1L).equals(fakePage.getId())) {
-                mPagerAdapter.removePage(fakePage);
-            }
             if (mFreeEndPageIndex >= 0) {
                 List<ClickReadPage> chargePages = mClickReadPages.subList(mFreeEndPageIndex,
                         mClickReadPages.size());
-                mPagerAdapter.addPages(chargePages);
-                mClickReadThumbnailList.getThumbnailAdapter().addItems(chargePages);
-                mPagerAdapter.refreshBookBuyTipsView(mViewPager, mFreeEndPageIndex);
+                mPagerAdapter.setData(chargePages);
+                mClickReadThumbnailList.getThumbnailAdapter().setData(chargePages);
                 mClickReadThumbnailList.scrollToPosition(mViewPager.getCurrentItem());
             }
+            renderPage();
+        }
+        if (mDelegate != null) {
+            mDelegate.onBuyResult(isBought);
         }
     }
 
@@ -435,6 +428,7 @@ public class ClickReadFragment extends Fragment implements
             }
         }
         renderPage();
+        mClickReadThumbnailList.hideDelay();
     }
 
 
