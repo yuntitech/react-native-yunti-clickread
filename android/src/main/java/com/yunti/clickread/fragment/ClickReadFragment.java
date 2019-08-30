@@ -15,7 +15,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
-import com.alibaba.fastjson.JSON;
 import com.cqtouch.entity.BaseType;
 import com.yt.ytdeep.client.dto.BuyResultDTO;
 import com.yt.ytdeep.client.dto.ClickReadCatalogDTO;
@@ -64,6 +63,7 @@ public class ClickReadFragment extends Fragment implements
     private JoinBookShelfButton mJoinBookShelfButton;
     private int prevPosition;
     private boolean isBought = false;
+    private boolean fromStudyPlan = false;
     private int mFreeEndPageIndex = -1;
     private boolean mIsInBookShelf = false;
     private List<ClickReadPage> mClickReadPages;
@@ -136,6 +136,8 @@ public class ClickReadFragment extends Fragment implements
     private void fetchData() {
         mLoading.setText("数据加载中...");
         mIsInBookShelf = isInBookShelf();
+        fromStudyPlan = fromStudyPlan();
+        isBought = fromStudyPlan;
         FetchInfo.FetchInfoParams fetchInfoParams = FetchInfo.queryByBookId(getBookId());
         YTApi.loadCache(fetchInfoParams, this, this);
     }
@@ -163,34 +165,33 @@ public class ClickReadFragment extends Fragment implements
             mDelegate.onResponse(response);
         }
         mClickReadPages = getClickReadPages(response);
-        fetchIsBuy(response.getId(), true, new YTApi.Callback<BuyResultDTO>() {
+        if (fromStudyPlan) {
+            render();
+        } else {
+            fetchIsBuy(response.getId(), true, new YTApi.Callback<BuyResultDTO>() {
 
-            private void renderMaybeKnowIsBuy() {
-                render();
-                restorePageIndex();
-            }
-
-            @Override
-            public void onFailure(int code, String errorMsg) {
-                if (YTApi.API_CODE_CACHE == code) {
-                    renderMaybeKnowIsBuy();
-                    fetchIsBuy(response.getId(), false, this);
+                @Override
+                public void onFailure(int code, String errorMsg) {
+                    if (YTApi.API_CODE_CACHE == code) {
+                        render();
+                        fetchIsBuy(response.getId(), false, this);
+                    }
                 }
-            }
 
-            @Override
-            public void onResponse(int code, BuyResultDTO response) {
-                switch (code) {
-                    case YTApi.API_CODE_CACHE:
-                        isBought = response.isBuySuccess();
-                        renderMaybeKnowIsBuy();
-                        break;
-                    case YTApi.API_CODE_NET:
-                        onIsBuyResponse(response);
-                        break;
+                @Override
+                public void onResponse(int code, BuyResultDTO response) {
+                    switch (code) {
+                        case YTApi.API_CODE_CACHE:
+                            isBought = response.isBuySuccess();
+                            render();
+                            break;
+                        case YTApi.API_CODE_NET:
+                            onIsBuyResponse(response);
+                            break;
+                    }
                 }
-            }
-        });
+            });
+        }
         if (YTApi.API_CODE_CACHE == code) {
             YTApi.fetch(FetchInfo.queryByBookId(getBookId()), null, this);
         }
@@ -242,6 +243,11 @@ public class ClickReadFragment extends Fragment implements
     private boolean isInBookShelf() {
         return getArguments() != null
                 && getArguments().getBoolean("isInBookShelf", false);
+    }
+
+    private boolean fromStudyPlan() {
+        return getArguments() != null
+                && getArguments().getBoolean("fromStudyPlan", false);
     }
 
     private Long getBookId() {
@@ -479,6 +485,7 @@ public class ClickReadFragment extends Fragment implements
         }
         renderPage();
         mClickReadThumbnailList.hideDelay();
+        restorePageIndex();
     }
 
 
@@ -494,7 +501,7 @@ public class ClickReadFragment extends Fragment implements
     }
 
     private void renderJoinBookShelfButton() {
-        mJoinBookShelfButton.setVisibility(mIsInBookShelf ? View.GONE : View.VISIBLE);
+        mJoinBookShelfButton.setVisibility(mIsInBookShelf || fromStudyPlan ? View.GONE : View.VISIBLE);
     }
 
     private void onPressPlayTracks() {
