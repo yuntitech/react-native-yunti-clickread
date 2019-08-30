@@ -1,0 +1,1 @@
+cp -R src/main /Users/lilala/Desktop/work_2019/github_yt_2/react-native-yunti-clickread/android/src
