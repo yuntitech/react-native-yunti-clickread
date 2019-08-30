@@ -1,6 +1,7 @@
 package com.yunti.clickread.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 

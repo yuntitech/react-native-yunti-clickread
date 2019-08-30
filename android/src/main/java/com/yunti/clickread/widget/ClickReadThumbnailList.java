@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import com.badoo.mobile.util.WeakHandler;
@@ -62,21 +63,11 @@ public class ClickReadThumbnailList extends YTRelativeLayout {
         mRvThumbnail.setAdapter(mThumbnailAdapter);
     }
 
-    public void setData(List<ClickReadPage> pages) {
-        mThumbnailAdapter.setData(pages);
-    }
-
-    public void setSmoothScroll(boolean smoothScroll) {
-        mRvThumbnail.setSmoothScroll(smoothScroll);
+    public void setData(List<ClickReadPage> pages, Long crId) {
+        mThumbnailAdapter.setData(pages, crId);
     }
 
     public void scrollToPosition(int position) {
-        mRvThumbnail.setSmoothScroll(false);
-        mRvThumbnail.scrollToPosition(position);
-    }
-
-    public void smoothScrollToPosition(int position) {
-        mRvThumbnail.setSmoothScroll(true);
         mRvThumbnail.scrollToPosition(position);
     }
 
@@ -147,5 +138,6 @@ public class ClickReadThumbnailList extends YTRelativeLayout {
 
     public interface ClickReadThumbnailListDelegate {
         View getPlayTracksView();
+
     }
 }

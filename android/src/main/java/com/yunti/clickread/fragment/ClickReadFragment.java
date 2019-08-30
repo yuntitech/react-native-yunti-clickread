@@ -2,6 +2,7 @@ package com.yunti.clickread.fragment;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
+import com.alibaba.fastjson.JSON;
 import com.cqtouch.entity.BaseType;
 import com.yt.ytdeep.client.dto.BuyResultDTO;
 import com.yt.ytdeep.client.dto.ClickReadCatalogDTO;
@@ -66,7 +68,8 @@ public class ClickReadFragment extends Fragment implements
     private boolean mIsInBookShelf = false;
     private List<ClickReadPage> mClickReadPages;
     private boolean mPlayTracksPageChanged = false;
-    private boolean mRestorePageIndex = false;
+    private boolean[] mRestoreCompleted = new boolean[]{true, true};
+    private int mRestorePageIndex = -1;
 
     public boolean isBought() {
         return isBought;
@@ -160,39 +163,80 @@ public class ClickReadFragment extends Fragment implements
             mDelegate.onResponse(response);
         }
         mClickReadPages = getClickReadPages(response);
-        render();
-        restorePageIndex();
-        fetchIsBuy(response.getId());
+        fetchIsBuy(response.getId(), true, new YTApi.Callback<BuyResultDTO>() {
+
+            private void renderMaybeKnowIsBuy() {
+                render();
+                restorePageIndex();
+            }
+
+            @Override
+            public void onFailure(int code, String errorMsg) {
+                if (YTApi.API_CODE_CACHE == code) {
+                    renderMaybeKnowIsBuy();
+                    fetchIsBuy(response.getId(), false, this);
+                }
+            }
+
+            @Override
+            public void onResponse(int code, BuyResultDTO response) {
+                switch (code) {
+                    case YTApi.API_CODE_CACHE:
+                        isBought = response.isBuySuccess();
+                        renderMaybeKnowIsBuy();
+                        break;
+                    case YTApi.API_CODE_NET:
+                        onIsBuyResponse(response);
+                        break;
+                }
+            }
+        });
         if (YTApi.API_CODE_CACHE == code) {
-            YTApi.fetch(FetchInfo.queryByBookId(getBookId()), null, null);
+            YTApi.fetch(FetchInfo.queryByBookId(getBookId()), null, this);
         }
     }
 
     public void userHasChanged() {
         if (mClickReadDTO != null) {
-            fetchIsBuy(mClickReadDTO.getId());
+            fetchIsBuy(mClickReadDTO.getId(), false, null);
         }
     }
 
-    private void fetchIsBuy(long crId) {
-        YTApi.loadCacheAndFetch(FetchInfo.isBuy(crId, UserOrderDTO.USERORDER_ORDERTYPE_BUY_CLICKREAD),
-                new YTApi.Callback<BuyResultDTO>() {
-                    @Override
-                    public void onFailure(int code, String errorMsg) {
+    private void fetchIsBuy(long crId, boolean loadCache, YTApi.Callback<BuyResultDTO> callback) {
+        YTApi.Callback<BuyResultDTO> isBuyCallback = new YTApi.Callback<BuyResultDTO>() {
+            @Override
+            public void onFailure(int code, String errorMsg) {
+                if (callback != null) {
+                    callback.onFailure(code, errorMsg);
+                }
+            }
 
-                    }
+            @Override
+            public void onResponse(int code, BuyResultDTO response) {
+                if (callback != null) {
+                    callback.onResponse(code, response);
+                    return;
+                }
+                onIsBuyResponse(response);
+            }
+        };
+        FetchInfo.FetchInfoParams fetchInfoParams
+                = FetchInfo.isBuy(crId, UserOrderDTO.USERORDER_ORDERTYPE_BUY_CLICKREAD);
+        if (loadCache) {
+            YTApi.loadCache(fetchInfoParams, isBuyCallback, this);
+        } else {
+            YTApi.fetch(fetchInfoParams, isBuyCallback, this);
+        }
+    }
 
-                    @Override
-                    public void onResponse(int code, BuyResultDTO response) {
-                        if (isBought) {
-                            return;
-                        }
-                        isBought = response.isBuySuccess();
-                        if (isBought) {
-                            buySuccess();
-                        }
-                    }
-                }, this);
+    private void onIsBuyResponse(BuyResultDTO response) {
+        if (isBought) {
+            return;
+        }
+        isBought = response.isBuySuccess();
+        if (isBought) {
+            buySuccess();
+        }
     }
 
     private boolean isInBookShelf() {
@@ -249,7 +293,7 @@ public class ClickReadFragment extends Fragment implements
     }
 
     @Override
-    public long getClickReadId() {
+    public Long getClickReadId() {
         return mClickReadDTO != null ? mClickReadDTO.getId() : 0;
     }
 
@@ -316,10 +360,10 @@ public class ClickReadFragment extends Fragment implements
                 } else {
                     curPageView.splashClickArea();
                 }
-                if (!isScrollByThumbnail && !mRestorePageIndex) {
-                    mClickReadThumbnailList.smoothScrollToPosition(position);
+                if (!isScrollByThumbnail && isRestoreCompleted()) {
+                    mClickReadThumbnailList.scrollToPosition(position);
                 }
-                mRestorePageIndex = false;
+                mRestoreCompleted[0] = true;
                 isScrollByThumbnail = false;
                 setButtonsVisible(true);
             }
@@ -332,15 +376,22 @@ public class ClickReadFragment extends Fragment implements
     }
 
     @Override
-    public void onSelected(View view, int position) {
-        mClickReadThumbnailList.setSmoothScroll(true);
-        isScrollByThumbnail = true;
-        mViewPager.setCurrentItem(position, false);
+    public void onSelected(View view, int position, int selectedPosition) {
+        if (mRestoreCompleted[1] && position != selectedPosition) {
+            isScrollByThumbnail = true;
+            mViewPager.setCurrentItem(position, false);
+        } else {
+            if (position == mRestorePageIndex || selectedPosition == mRestorePageIndex) {
+                mClickReadThumbnailList.scrollToPosition(mRestorePageIndex);
+            }
+            mRestoreCompleted[1] = true;
+        }
     }
 
     @Override
     public void onScrolled() {
         mJoinBookShelfButton.collapseAddShelfButton();
+        mClickReadThumbnailList.hideDelay();
     }
 
     @Override
@@ -374,8 +425,7 @@ public class ClickReadFragment extends Fragment implements
                 List<ClickReadPage> chargePages = mClickReadPages.subList(mFreeEndPageIndex,
                         mClickReadPages.size());
                 mPagerAdapter.setData(chargePages);
-                mClickReadThumbnailList.getThumbnailAdapter().setData(chargePages);
-                mClickReadThumbnailList.scrollToPosition(mViewPager.getCurrentItem());
+                mClickReadThumbnailList.setData(chargePages, mClickReadDTO.getId());
             }
             renderPage();
         }
@@ -408,8 +458,7 @@ public class ClickReadFragment extends Fragment implements
     private void render() {
         mLoading.setText("");
         if (isBought) {
-            mPagerAdapter.setData(mClickReadPages);
-            mClickReadThumbnailList.setData(mClickReadPages);
+            buySuccess();
         } else {
             int useFreeEndPageIndex = Math.max(mFreeEndPageIndex, 0);
             List<ClickReadPage> freePageList = new ArrayList<>();
@@ -421,8 +470,9 @@ public class ClickReadFragment extends Fragment implements
             fakePage.setId(-1L);
             freePageList.add(fakePage);
             mPagerAdapter.setData(freePageList);
-            mClickReadThumbnailList.setData(freePageList.subList(0, freePageList.size() - 1));
-
+            mClickReadThumbnailList.setData(freePageList.subList(0, freePageList.size() - 1),
+                    mClickReadDTO.getId());
+            mClickReadThumbnailList.scrollToPosition(mViewPager.getCurrentItem());
             if (useFreeEndPageIndex == 0) {
                 setButtonsVisible(false);
             }
@@ -594,15 +644,22 @@ public class ClickReadFragment extends Fragment implements
                         @Override
                         public void resolve(String result) {
                             if (!TextUtils.isEmpty(result)) {
-                                int index = Integer.parseInt(result);
-                                mRestorePageIndex = true;
-                                mViewPager.setCurrentItem(index, false);
-                                mViewPager.postDelayed(() -> mClickReadThumbnailList.smoothScrollToPosition(index),
-                                        1000);
+                                mRestorePageIndex = Integer.parseInt(result);
+                                mRestoreCompleted[0] = false;
+                                mRestoreCompleted[1] = false;
+                                mViewPager.setCurrentItem(mRestorePageIndex, false);
+                                mViewPager.postDelayed(() -> {
+                                            mClickReadThumbnailList.scrollToPosition(mRestorePageIndex);
+                                        },
+                                        300);
                             }
                         }
                     }, this);
         }
+    }
+
+    private boolean isRestoreCompleted() {
+        return mRestoreCompleted[0] && mRestoreCompleted[1];
     }
 
     private String getPageIndexKey() {

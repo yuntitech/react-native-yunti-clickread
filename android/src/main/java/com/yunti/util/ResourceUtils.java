@@ -15,7 +15,7 @@ import java.io.File;
 
 public class ResourceUtils {
 
-    public static String getAudioFilePath(Long crId, Long resId, long userId, Context context) {
+    public static String getAudioFilePath(Long crId, Long resId, Long userId, Context context) {
         String filePath = getClickReadFilePath(crId, resId, "audio",
                 userId, context);
         if (!TextUtils.isEmpty(filePath) && new File(filePath).exists()) {
@@ -24,7 +24,7 @@ public class ResourceUtils {
         return null;
     }
 
-    public static String getImageUri(Long crId, Long resId, String resIdSign, long userId,
+    public static String getImageUri(Long crId, Long resId, String resIdSign, Long userId,
                                      Context context) {
         String filePath = getClickReadFilePath(crId, resId, "image", userId, context);
         if (!TextUtils.isEmpty(filePath) && new File(filePath).exists()) {
@@ -34,7 +34,17 @@ public class ResourceUtils {
         }
     }
 
-    private static String getClickReadFilePath(long crId, long resId, String resType, long userId,
+    public static String getThumbnailFilePath(Long crId, Long resId, Long userId,
+                                              Context context) {
+        String filePath = getClickReadFilePath(crId, resId, "thumbnail", userId, context);
+        if (!TextUtils.isEmpty(filePath) && new File(filePath).exists()) {
+            return filePath;
+        } else {
+            return null;
+        }
+    }
+
+    private static String getClickReadFilePath(Long crId, Long resId, String resType, Long userId,
                                                Context context) {
         String crDir = getClickReadDir(context, userId, crId);
         if (crDir != null) {
@@ -64,8 +74,8 @@ public class ResourceUtils {
                         resId, resIdSign, 4);
     }
 
-    private static String getClickReadDir(Context context, long userId, long crId) {
-        if (context != null) {
+    private static String getClickReadDir(Context context, Long userId, Long crId) {
+        if (context != null && userId != null && crId != null) {
             File file = context.getExternalFilesDir(null);
             if (file != null) {
                 String externalDirectory = file.getAbsolutePath();

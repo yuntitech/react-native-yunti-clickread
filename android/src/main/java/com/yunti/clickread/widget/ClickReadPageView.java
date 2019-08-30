@@ -438,7 +438,7 @@ public class ClickReadPageView extends RelativeLayout {
 
         void onClickOtherArea();
 
-        long getClickReadId();
+        Long getClickReadId();
 
         void onImageLoadSuccess(int position);
 

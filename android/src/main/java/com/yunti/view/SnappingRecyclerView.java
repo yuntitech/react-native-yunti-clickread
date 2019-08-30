@@ -20,6 +20,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -111,7 +112,6 @@ public class SnappingRecyclerView extends RecyclerView {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-
                 /** if scroll is caused by a touch (scroll touch, not any touch) **/
                 if (newState == SCROLL_STATE_TOUCH_SCROLL) {
                     /** if scroll was initiated already, it would probably be a tap **/
@@ -147,10 +147,10 @@ public class SnappingRecyclerView extends RecyclerView {
     private void notifyListener() {
         View view = getCenterView();
         int position = getChildAdapterPosition(view);
-
         /** if there is a listener and the index is not the same as the currently selected position, notify listener **/
-        if (_listener != null && position != _selectedPosition) {
-            _listener.onSelected(view, position);
+//        if (_listener != null && position != _selectedPosition) {
+        if (_listener != null) {
+            _listener.onSelected(view, position, _selectedPosition);
         }
 
         _selectedPosition = position;
@@ -290,11 +290,7 @@ public class SnappingRecyclerView extends RecyclerView {
     public void scrollToPosition(int position) {
         if (getChildAt(0) != null) {
             _childViewMetrics.size(getChildAt(0));
-            if (mSmoothScroll) {
-                smoothScrollBy(_childViewMetrics.size(getChildAt(0)) * (position - _selectedPosition));
-            } else {
-                scrollBy(_childViewMetrics.size(getChildAt(0)) * (position - _selectedPosition));
-            }
+            smoothScrollBy(_childViewMetrics.size(getChildAt(0)) * (position - _selectedPosition));
             _selectedPosition = position;
         }
     }
@@ -445,7 +441,7 @@ public class SnappingRecyclerView extends RecyclerView {
     }
 
     public interface OnViewSelectedListener {
-        void onSelected(View view, int position);
+        void onSelected(View view, int position, int selectedPosition);
 
         void onScrolled();
     }

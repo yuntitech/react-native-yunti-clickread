@@ -66,7 +66,7 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
     private static final long mProgressUpdateInterval = 250;
     //
     private boolean mPlayTracks = false;
-    private long mClickReadId = 0;
+    private Long mClickReadId = 0L;
     private List<ClickReadTrackinfo> trackInfoList;
     private ClickReadTrackinfo mPlayTrackInfo;
     private EventListener mEventListener;
@@ -89,7 +89,7 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         mPlayTracks = !mPlayTracks;
     }
 
-    public void setClickReadId(long clickReadId) {
+    public void setClickReadId(Long clickReadId) {
         mClickReadId = clickReadId;
     }
 

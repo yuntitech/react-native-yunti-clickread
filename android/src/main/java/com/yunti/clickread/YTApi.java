@@ -45,7 +45,12 @@ public class YTApi {
                     String data = responseObject.getString("data");
                     T result = (T) JSON.parseObject(data, params.getClazz());
                     runOnUiThread(() -> callback.onResponse(API_CODE_CACHE, result), fragment);
+                } else {
+                    String msg = responseObject.getString("msg");
+                    runOnUiThread(() -> callback.onFailure(API_CODE_CACHE, msg), fragment);
                 }
+            } else {
+                runOnUiThread(() -> callback.onFailure(API_CODE_CACHE, "empty data "), fragment);
             }
             params.addLdv(ldv);
             fetch(params, callback, fragment);

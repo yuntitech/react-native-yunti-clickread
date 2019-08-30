@@ -14,7 +14,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.yt.ytdeep.client.dto.ClickReadPage;
+import com.yunti.clickread.FetchInfo;
 import com.yunti.clickread.R;
+import com.yunti.util.ResourceUtils;
 import com.yunti.util.YTDisplayHelper;
 
 import java.util.ArrayList;
@@ -29,13 +31,15 @@ import java.util.List;
 public class ThumbnailAdapter extends RecyclerView.Adapter {
     private Context mContext;
     private List<ClickReadPage> mPages;
+    private Long mCrId;
 
     public ThumbnailAdapter(Context context) {
         this.mContext = context;
         this.mPages = new ArrayList<>();
     }
 
-    public void setData(List<ClickReadPage> pages) {
+    public void setData(List<ClickReadPage> pages, Long crId) {
+        mCrId = crId;
         if (pages != null) {
             mPages.clear();
             mPages.addAll(pages);
@@ -101,7 +105,11 @@ public class ThumbnailAdapter extends RecyclerView.Adapter {
 
         private void bind(ClickReadPage page, int position) {
             this.page = page;
-            String uri = page.getThumbnails();
+            String uri = ResourceUtils.getThumbnailFilePath(mCrId, page.getImgResId(),
+                    FetchInfo.USER_ID, mContext);
+            if (uri == null) {
+                uri = page.getThumbnails();
+            }
             if (mContext instanceof Activity && !((Activity) mContext).isFinishing()) {
                 Glide.with(mContext)
                         .load(uri)
