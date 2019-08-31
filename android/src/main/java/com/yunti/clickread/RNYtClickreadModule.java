@@ -94,6 +94,19 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         Activity activity = getCurrentActivity();
         if (activity != null) {
             Intent intent = new Intent(activity, mClass);
+            Bundle bundle = Arguments.toBundle(params);
+            if (bundle != null) {
+                intent.putExtras(bundle);
+            }
+            activity.startActivity(intent);
+        }
+    }
+
+    @ReactMethod
+    public void reorderToFront(ReadableMap params) {
+        Activity activity = getCurrentActivity();
+        if (activity != null) {
+            Intent intent = new Intent(activity, mClass);
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             Bundle bundle = Arguments.toBundle(params);
             if (bundle != null) {
@@ -145,7 +158,7 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         RNYtClickreadModule.push(cxt, params);
     }
 
-    private static void startActivity(Context cxt) {
+    public static void startNavigationActivity(Context cxt) {
         try {
             Intent intent = new Intent();
             Class<?> clazz = Class.forName("com.reactnativenavigation.controllers.NavigationActivity");
@@ -174,7 +187,7 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         intent.putExtra("action", "push");
         intent.putExtras(params);
         LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
-        startActivity(cxt);
+        startNavigationActivity(cxt);
     }
 
     public static void pop(Context cxt) {
