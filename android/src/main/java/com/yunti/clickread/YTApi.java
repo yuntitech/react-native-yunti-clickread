@@ -153,12 +153,12 @@ public class YTApi {
                 T result = (T) JSON.parseObject(data, params.getClazz());
                 onResponseExecute(callback, API_CODE_NET, result, fragment);
             }
-            Boolean cacheIsNew = responseObject.getBoolean("cacheIsNew");
+//            Boolean cacheIsNew = responseObject.getBoolean("cacheIsNew");
             //有新数据
-            if (Boolean.FALSE.equals(cacheIsNew)) {
-                String ldv = MD5Util.MD5(responseData);
-                saveApiCacheIfNeeded(params, responseObject, ldv, fragment);
-            }
+//            if (Boolean.FALSE.equals(cacheIsNew)) {
+            String ldv = MD5Util.MD5(responseData);
+            saveApiCacheIfNeeded(params, responseObject, ldv, fragment);
+//            }
         } else {
             onFetchFailure(new IOException(responseObject.getString("msg")), callback, fragment);
         }
