@@ -17,7 +17,7 @@
             android:id="@+id/iv_icon"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:src="@drawable/ic_network_error" />
+            android:src="@drawable/ic_error_net" />
 
         <TextView
             android:id="@+id/tv_empty_tip"

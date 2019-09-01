@@ -23,4 +23,5 @@
     <declare-styleable name="OptionItemView">
         <attr name="option" format="string" />
     </declare-styleable>
+
 </resources>

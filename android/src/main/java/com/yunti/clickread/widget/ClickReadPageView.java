@@ -45,8 +45,7 @@ public class ClickReadPageView extends RelativeLayout {
     private FrameMask mFrameMask;
     private ClickArea mClickArea;
     private ClickReadPage mClickPage;
-    private RelativeLayout mLayoutLoad;
-    private TextView mNetWorkErrorTips;
+    private CRPageLoadTipsView mCRPageLoadTipsView;
     private TextView mBuyNoticeView;
     private CustomTarget<Bitmap> mImgTarget;
     private Context mContext;
@@ -100,8 +99,7 @@ public class ClickReadPageView extends RelativeLayout {
         mFrameMask = (FrameMask) findViewById(R.id.frame_mask);
         mClickArea = (ClickArea) findViewById(R.id.pointing_area);
         mBuyNoticeView = (TextView) findViewById(R.id.buy_notice_view);
-        mNetWorkErrorTips = (TextView) findViewById(R.id.network_error_tips);
-        mLayoutLoad = (RelativeLayout) findViewById(R.id.layout_resource_load);
+        mCRPageLoadTipsView = findViewById(R.id.page_load_tips);
         mAttacher = new PhotoViewAttacher(mPageBg);
         mOriginalFrames = new ArrayList<>();
         DisplayMetrics dm = getResources().getDisplayMetrics();
@@ -140,7 +138,7 @@ public class ClickReadPageView extends RelativeLayout {
         Rect frame = new Rect();
         ((Activity) mContext).getWindow().getDecorView().getWindowVisibleDisplayFrame(frame);
         statusBarHeight = frame.top;
-        mNetWorkErrorTips.setOnClickListener(new OnClickListener() {
+        mCRPageLoadTipsView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 showLoading();
@@ -300,13 +298,11 @@ public class ClickReadPageView extends RelativeLayout {
     }
 
     public void showLoading() {
-        mLayoutLoad.setVisibility(VISIBLE);
-        mNetWorkErrorTips.setText("图片加载中...");
+        mCRPageLoadTipsView.showLoading();
     }
 
     public void showLoadFail() {
-        mLayoutLoad.setVisibility(VISIBLE);
-        mNetWorkErrorTips.setText("图片加载失败");
+        mCRPageLoadTipsView.showError();
         isLoadImageSuccess = false;
         if (mDelegate != null) {
             mDelegate.onImageLoadFail(position);
@@ -314,7 +310,7 @@ public class ClickReadPageView extends RelativeLayout {
     }
 
     public void showLoadSuccess() {
-        mLayoutLoad.setVisibility(GONE);
+        mCRPageLoadTipsView.hide();
         if (isShowClickArea) {
             showClickArea();
         } else {

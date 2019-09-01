@@ -25,17 +25,12 @@
         android:layout_centerInParent="true"
         android:clickable="false" />
 
-    <RelativeLayout
-        android:id="@+id/layout_resource_load"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <com.yunti.clickread.widget.CRPageLoadTipsView
+        android:id="@+id/page_load_tips"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true" />
 
-        <TextView
-            android:id="@+id/network_error_tips"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true" />
-    </RelativeLayout>
 
     <TextView
         android:id="@+id/buy_notice_view"

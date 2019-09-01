@@ -29,6 +29,7 @@ import com.yunti.clickread.RNYtClickreadModule;
 import com.yunti.clickread.Utils;
 import com.yunti.clickread.YTApi;
 import com.yunti.clickread.adapter.ClickReadPagerAdapter;
+import com.yunti.clickread.widget.YTLoadTipsView;
 import com.yunti.clickread.widget.ClickReadPageView;
 import com.yunti.clickread.widget.ClickReadThumbnailList;
 import com.yunti.clickread.widget.ClickReadTitleBar;
@@ -40,6 +41,8 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.FormBody;
 
 
 public class ClickReadFragment extends Fragment implements
@@ -54,7 +57,7 @@ public class ClickReadFragment extends Fragment implements
     private JazzyViewPager mViewPager;
     private ClickReadPagerAdapter mPagerAdapter;
     private PlayerManager mPlayerManager;
-    private TextView mLoading;
+    private YTLoadTipsView mCRLoadTipsView;
     private ClickReadTitleBar mTitleBar;
     private boolean isScrollByThumbnail = false;
     private boolean isShowClickArea = false;
@@ -119,7 +122,8 @@ public class ClickReadFragment extends Fragment implements
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_click_read, container, false);
-        mLoading = (TextView) rootView.findViewById(R.id.tv_loading);
+        mCRLoadTipsView = rootView.findViewById(R.id.view_load_tips);
+        mCRLoadTipsView.setOnClickListener(this);
         mViewPager = (JazzyViewPager) rootView.findViewById(R.id.view_paper);
         mClickReadThumbnailList = rootView.findViewById(R.id.layout_bottom_bar);
         mClickReadThumbnailList.setDelegate(this);
@@ -148,7 +152,7 @@ public class ClickReadFragment extends Fragment implements
     }
 
     private void fetchData() {
-        mLoading.setText("数据加载中...");
+        mCRLoadTipsView.showLoading();
         mIsInBookShelf = isInBookShelf();
         fromStudyPlan = fromStudyPlan();
         isBought = fromStudyPlan;
@@ -167,7 +171,12 @@ public class ClickReadFragment extends Fragment implements
                         YTApi.fetch(FetchInfo.queryByBookId(getBookId()), this, ClickReadFragment.this);
                         break;
                     case YTApi.API_CODE_NET:
-                        mLoading.setText("数据加载失败...");
+                        ClickReadFragment.this.runOnUiThread(() -> {
+                            if (mClickReadDTO == null) {
+                                mCRLoadTipsView.showError("数据加载失败");
+                                mClickReadThumbnailList.hide();
+                            }
+                        });
                         break;
                 }
             }
@@ -198,7 +207,7 @@ public class ClickReadFragment extends Fragment implements
                     }
                 });
                 if (YTApi.API_CODE_CACHE == code) {
-                    YTApi.fetch(FetchInfo.queryByBookId(getBookId()), null, ClickReadFragment.this);
+                    YTApi.fetch(fetchInfoParams, null, ClickReadFragment.this);
                 }
             }
         }, this);
@@ -439,7 +448,7 @@ public class ClickReadFragment extends Fragment implements
     @Override
     public void onClick(View view) {
         int viewId = view.getId();
-        if (viewId == R.id.btn_catalog) {
+        if (viewId == R.id.btn_catalog && mClickReadDTO != null) {
             mDelegate.onCatalogClick();
         } else if (viewId == R.id.btn_buy
                 || viewId == R.id.layout_buy_clickread_book) {
@@ -454,6 +463,8 @@ public class ClickReadFragment extends Fragment implements
             toggleClickArea();
         } else if (viewId == R.id.btn_play_tracks) {
             onPressPlayTracks();
+        } else if (viewId == R.id.view_load_tips) {
+            fetchData();
         }
     }
 
@@ -498,7 +509,7 @@ public class ClickReadFragment extends Fragment implements
     }
 
     private void render() {
-        mLoading.setText("");
+        mCRLoadTipsView.hide();
         if (isBought) {
             buySuccess();
         } else {
@@ -731,11 +742,6 @@ public class ClickReadFragment extends Fragment implements
 
     private ClickReadPageView getCurrentPageView() {
         return getPageView(mViewPager.getCurrentItem());
-    }
-
-    private Bundle getExtras(Bundle savedInstanceState) {
-        return savedInstanceState != null ?
-                savedInstanceState : getArguments();
     }
 
     public interface ClickReadFragmentDelegate {

@@ -41,9 +41,9 @@ public class YTApi {
             if (!TextUtils.isEmpty(responseData)) {
                 JSONObject responseObject = JSON.parseObject(responseData);
                 ldv = responseObject.getString("ldv");
-                boolean success = responseObject.getBoolean("success");
-                if (success) {
-                    String data = responseObject.getString("data");
+                Boolean success = responseObject.getBoolean("success");
+                String data = responseObject.getString("data");
+                if (Boolean.TRUE.equals(success) && !TextUtils.isEmpty(data)) {
                     T result = (T) JSON.parseObject(data, params.getClazz());
                     onResponseExecute(callback, API_CODE_CACHE, result, fragment);
                 } else {
@@ -72,9 +72,11 @@ public class YTApi {
             String responseData = getApiCache(params, fragment);
             if (!TextUtils.isEmpty(responseData)) {
                 JSONObject responseObject = JSON.parseObject(responseData);
-                boolean success = responseObject.getBoolean("success");
-                if (success) {
-                    String data = responseObject.getString("data");
+                String ldv = responseObject.getString("ldv");
+                Boolean success = responseObject.getBoolean("success");
+                String data = responseObject.getString("data");
+                if (Boolean.TRUE.equals(success) && !TextUtils.isEmpty(data)) {
+                    params.addLdv(ldv);
                     T result = (T) JSON.parseObject(data, params.getClazz());
                     onResponseExecute(callback, API_CODE_CACHE, result, fragment);
                 } else {
@@ -144,15 +146,19 @@ public class YTApi {
         }
         String responseData = response.body().string();
         JSONObject responseObject = JSON.parseObject(responseData);
-        boolean success = responseObject.getBoolean("success");
-        if (success) {
+        Boolean success = responseObject.getBoolean("success");
+        String data = responseObject.getString("data");
+        if (Boolean.TRUE.equals(success) && !TextUtils.isEmpty(data)) {
             if (callback != null) {
-                String data = responseObject.getString("data");
                 T result = (T) JSON.parseObject(data, params.getClazz());
                 onResponseExecute(callback, API_CODE_NET, result, fragment);
             }
-            String ldv = MD5Util.MD5(responseData);
-            saveApiCacheIfNeeded(params, responseObject, ldv, fragment);
+            Boolean cacheIsNew = responseObject.getBoolean("cacheIsNew");
+            //有新数据
+            if (Boolean.FALSE.equals(cacheIsNew)) {
+                String ldv = MD5Util.MD5(responseData);
+                saveApiCacheIfNeeded(params, responseObject, ldv, fragment);
+            }
         } else {
             onFetchFailure(new IOException(responseObject.getString("msg")), callback, fragment);
         }

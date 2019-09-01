@@ -26,12 +26,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <TextView
-                android:id="@+id/tv_loading"
+            <com.yunti.clickread.widget.YTLoadTipsView
+                android:id="@+id/view_load_tips"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="数据加载中..." />
+                android:layout_gravity="center" />
+
 
             <com.yunti.clickread.widget.JoinBookShelfButton
                 android:id="@+id/layout_add_to_book_shelf"
