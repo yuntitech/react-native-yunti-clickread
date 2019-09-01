@@ -49,7 +49,6 @@ public class SnappingRecyclerView extends RecyclerView {
     private int _selectedPosition = 0;
 
     private final static int MINIMUM_SCROLL_EVENT_OFFSET_MS = 20;
-    private boolean mSmoothScroll = true;
 
     public SnappingRecyclerView(Context context) {
         this(context, null);
@@ -71,14 +70,6 @@ public class SnappingRecyclerView extends RecyclerView {
     }
 
     private boolean scrolling;
-
-    public boolean isSmoothScroll() {
-        return mSmoothScroll;
-    }
-
-    public void setSmoothScroll(boolean smoothScroll) {
-        mSmoothScroll = smoothScroll;
-    }
 
     @Override
     public void onChildAttachedToWindow(View child) {

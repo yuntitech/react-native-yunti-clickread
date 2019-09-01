@@ -18,6 +18,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.alibaba.fastjson.JSON;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.JavaOnlyArray;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
@@ -325,22 +326,37 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
             if (reactContext != null) {
                 AsyncStorageModule storageModule = reactContext.getNativeModule(AsyncStorageModule.class);
                 if (storageModule != null) {
-                    storageModule.multiGet(keys, args -> {
+                    com.facebook.react.bridge.Callback storageCallback = args -> {
                         List<Object> argsList = Arguments.fromJavaArgs(args).toArrayList();
                         List<Object> resultList = (List<Object>) argsList.get(1);
                         if (resultList != null) {
                             resultList = (List<Object>) resultList.get(0);
                             Object value = resultList.get(1);
-                            runOnUiThread(fragment, () ->
-                                    callback.resolve(value != null ? value.toString() : null));
+                            if (callback.runAsync()) {
+                                runOnUiThread(fragment, () -> {
+                                    callback.resolve(value != null ? value.toString() : null);
+                                });
+                            } else {
+                                callback.resolve(value != null ? value.toString() : null);
+                            }
 
                         } else {
                             resultList = (List<Object>) argsList.get(0);
                             Object error = resultList.get(0);
-                            runOnUiThread(fragment, () ->
-                                    callback.reject(error != null ? error.toString() : null));
+                            if (callback.runAsync()) {
+                                runOnUiThread(fragment, () ->
+                                        callback.reject(error != null ? error.toString() : null));
+                            } else {
+                                callback.reject(error != null ? error.toString() : null);
+                            }
                         }
-                    });
+                    };
+                    if (callback.runAsync()) {
+                        storageModule.multiGet(keys, storageCallback);
+                    } else {
+                        storageModule.multiGetSync(keys, storageCallback);
+                    }
+
                 }
             }
         }
@@ -397,14 +413,8 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         dialog.show();
     }
 
-    private static boolean checkValid(Fragment fragment) {
-        return fragment != null
-                && fragment.getActivity() != null
-                && !fragment.getActivity().isFinishing();
-    }
-
     private static void runOnUiThread(Fragment fragment, Runnable runnable) {
-        if (fragment.getActivity() != null) {
+        if (fragment.getActivity() != null && !fragment.getActivity().isFinishing()) {
             fragment.getActivity().runOnUiThread(runnable);
         }
     }
@@ -413,9 +423,14 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         void onClick();
     }
 
-    public interface Callback {
-        void reject(String error);
+    public abstract static class Callback {
+        public void reject(String error) {
+        }
 
-        void resolve(String result);
+        public abstract void resolve(String result);
+
+        public boolean runAsync() {
+            return true;
+        }
     }
 }

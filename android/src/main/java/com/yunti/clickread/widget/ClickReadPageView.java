@@ -443,6 +443,7 @@ public class ClickReadPageView extends RelativeLayout {
         void onImageLoadSuccess(int position);
 
         void onImageLoadFail(int position);
+
     }
 
 }

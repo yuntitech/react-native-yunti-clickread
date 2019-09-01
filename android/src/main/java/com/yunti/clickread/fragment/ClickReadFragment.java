@@ -46,7 +46,7 @@ public class ClickReadFragment extends Fragment implements
         ClickReadPageView.ClickReadPageViewDelegate, PlayerManager.EventListener,
         ViewPager.OnPageChangeListener, SnappingRecyclerView.OnViewSelectedListener,
         View.OnClickListener, ClickReadThumbnailList.ClickReadThumbnailListDelegate,
-        JoinBookShelfButton.JoinBookShelfButtonDelegate, YTApi.Callback<ClickReadDTO> {
+        JoinBookShelfButton.JoinBookShelfButtonDelegate {
 
     private ClickReadThumbnailList mClickReadThumbnailList;
     private ImageButton mPlayTracks;
@@ -133,38 +133,72 @@ public class ClickReadFragment extends Fragment implements
         return rootView;
     }
 
+
+    public void userHasChanged() {
+        if (mClickReadDTO != null) {
+            fetchIsBuy(mClickReadDTO.getId(), false, null);
+        }
+    }
+
     private void fetchData() {
         mLoading.setText("数据加载中...");
         mIsInBookShelf = isInBookShelf();
         fromStudyPlan = fromStudyPlan();
         isBought = fromStudyPlan;
         FetchInfo.FetchInfoParams fetchInfoParams = FetchInfo.queryByBookId(getBookId());
-        YTApi.loadCache(fetchInfoParams, this, this);
+        YTApi.loadCache(fetchInfoParams, new YTApi.Callback<ClickReadDTO>() {
+
+            @Override
+            public boolean runOnUiThread() {
+                return false;
+            }
+
+            @Override
+            public void onFailure(int code, String errorMsg) {
+                switch (code) {
+                    case YTApi.API_CODE_CACHE:
+                        YTApi.fetch(FetchInfo.queryByBookId(getBookId()), this, ClickReadFragment.this);
+                        break;
+                    case YTApi.API_CODE_NET:
+                        mLoading.setText("数据加载失败...");
+                        break;
+                }
+            }
+
+            @Override
+            public void onResponse(int code, ClickReadDTO response) {
+                mClickReadDTO = response;
+                if (mPlayerManager != null) {
+                    mPlayerManager.setClickReadId(response.getId());
+                }
+                mClickReadPages = getClickReadPages(response);
+                restorePageIndex(new RNYtClickreadModule.Callback() {
+
+                    @Override
+                    public void resolve(String result) {
+                        if (!TextUtils.isEmpty(result)) {
+                            mRestorePageIndex = Integer.valueOf(result);
+                            mRestoreCompleted[0] = false;
+                            mRestoreCompleted[1] = false;
+                        }
+                        ClickReadFragment.this.runOnUiThread(() -> {
+                            if (mDelegate != null) {
+                                mDelegate.onResponse(response);
+                            }
+                            renderMaybeKnowIsBuy(response);
+                        });
+
+                    }
+                });
+                if (YTApi.API_CODE_CACHE == code) {
+                    YTApi.fetch(FetchInfo.queryByBookId(getBookId()), null, ClickReadFragment.this);
+                }
+            }
+        }, this);
     }
 
 
-    @Override
-    public void onFailure(int code, String errorMsg) {
-        switch (code) {
-            case YTApi.API_CODE_CACHE:
-                YTApi.fetch(FetchInfo.queryByBookId(getBookId()), this, this);
-                break;
-            case YTApi.API_CODE_NET:
-                mLoading.setText("数据加载失败...");
-                break;
-        }
-    }
-
-    @Override
-    public void onResponse(int code, ClickReadDTO response) {
-        mClickReadDTO = response;
-        if (mPlayerManager != null) {
-            mPlayerManager.setClickReadId(response.getId());
-        }
-        if (mDelegate != null) {
-            mDelegate.onResponse(response);
-        }
-        mClickReadPages = getClickReadPages(response);
+    private void renderMaybeKnowIsBuy(ClickReadDTO response) {
         if (fromStudyPlan) {
             render();
         } else {
@@ -191,15 +225,6 @@ public class ClickReadFragment extends Fragment implements
                     }
                 }
             });
-        }
-        if (YTApi.API_CODE_CACHE == code) {
-            YTApi.fetch(FetchInfo.queryByBookId(getBookId()), null, this);
-        }
-    }
-
-    public void userHasChanged() {
-        if (mClickReadDTO != null) {
-            fetchIsBuy(mClickReadDTO.getId(), false, null);
         }
     }
 
@@ -386,11 +411,15 @@ public class ClickReadFragment extends Fragment implements
         if (mRestoreCompleted[1] && position != selectedPosition) {
             isScrollByThumbnail = true;
             mViewPager.setCurrentItem(position, false);
-        } else {
-            if (position == mRestorePageIndex || selectedPosition == mRestorePageIndex) {
-                mClickReadThumbnailList.scrollToPosition(mRestorePageIndex);
+        } else if (!mRestoreCompleted[1]) {
+            if (position != mRestorePageIndex) {
+                mViewPager.postDelayed(() -> mClickReadThumbnailList.scrollToPosition(mRestorePageIndex), 200);
+
             }
-            mRestoreCompleted[1] = true;
+            if (position == mRestorePageIndex) {
+                mRestoreCompleted[1] = true;
+            }
+
         }
     }
 
@@ -485,7 +514,11 @@ public class ClickReadFragment extends Fragment implements
         }
         renderPage();
         mClickReadThumbnailList.hideDelay();
-        restorePageIndex();
+        mViewPager.setCurrentItem(mRestorePageIndex, false);
+        mViewPager.postDelayed(() -> {
+                    mClickReadThumbnailList.scrollToPosition(mRestorePageIndex);
+                },
+                300);
     }
 
 
@@ -639,27 +672,24 @@ public class ClickReadFragment extends Fragment implements
         }
     }
 
-    private void restorePageIndex() {
+    private void restorePageIndex(RNYtClickreadModule.Callback callback) {
         if (mClickReadDTO != null) {
             RNYtClickreadModule.getStorageItem(getContext(), getPageIndexKey(),
                     new RNYtClickreadModule.Callback() {
+
+                        @Override
+                        public boolean runAsync() {
+                            return false;
+                        }
+
                         @Override
                         public void reject(String error) {
-
+                            callback.resolve(null);
                         }
 
                         @Override
                         public void resolve(String result) {
-                            if (!TextUtils.isEmpty(result)) {
-                                mRestorePageIndex = Integer.parseInt(result);
-                                mRestoreCompleted[0] = false;
-                                mRestoreCompleted[1] = false;
-                                mViewPager.setCurrentItem(mRestorePageIndex, false);
-                                mViewPager.postDelayed(() -> {
-                                            mClickReadThumbnailList.scrollToPosition(mRestorePageIndex);
-                                        },
-                                        300);
-                            }
+                            callback.resolve(result);
                         }
                     }, this);
         }
@@ -667,6 +697,12 @@ public class ClickReadFragment extends Fragment implements
 
     private boolean isRestoreCompleted() {
         return mRestoreCompleted[0] && mRestoreCompleted[1];
+    }
+
+    private void runOnUiThread(Runnable runnable) {
+        if (getActivity() != null && !getActivity().isFinishing()) {
+            getActivity().runOnUiThread(runnable);
+        }
     }
 
     private String getPageIndexKey() {

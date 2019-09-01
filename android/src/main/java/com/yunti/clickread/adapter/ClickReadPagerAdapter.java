@@ -1,13 +1,11 @@
 package com.yunti.clickread.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
-import androidx.viewpager.widget.ViewPager;
 
 import com.yt.ytdeep.client.dto.ClickReadPage;
 import com.yt.ytdeep.client.dto.ClickReadTrackinfo;

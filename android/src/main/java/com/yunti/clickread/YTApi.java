@@ -1,5 +1,6 @@
 package com.yunti.clickread;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -34,7 +35,7 @@ public class YTApi {
 
     public static <T> void loadCacheAndFetch(FetchInfo.FetchInfoParams params, Callback<T> callback,
                                              Fragment fragment) {
-        OkHttpClientProvider.getOkHttpClient().dispatcher().executorService().submit(() -> {
+        Runnable task = () -> {
             String responseData = getApiCache(params, fragment);
             String ldv = null;
             if (!TextUtils.isEmpty(responseData)) {
@@ -44,22 +45,30 @@ public class YTApi {
                 if (success) {
                     String data = responseObject.getString("data");
                     T result = (T) JSON.parseObject(data, params.getClazz());
-                    runOnUiThread(() -> callback.onResponse(API_CODE_CACHE, result), fragment);
+                    onResponseExecute(callback, API_CODE_CACHE, result, fragment);
                 } else {
                     String msg = responseObject.getString("msg");
-                    runOnUiThread(() -> callback.onFailure(API_CODE_CACHE, msg), fragment);
+                    onFailureExecute(callback, API_CODE_CACHE, msg, fragment);
                 }
             } else {
-                runOnUiThread(() -> callback.onFailure(API_CODE_CACHE, "empty data "), fragment);
+                onFailureExecute(callback, API_CODE_CACHE, "empty data ", fragment);
             }
             params.addLdv(ldv);
             fetch(params, callback, fragment);
-        });
+        };
+        //当前为主线程
+        if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
+            OkHttpClientProvider.getOkHttpClient().dispatcher().executorService().submit(task);
+        }
+        //其他线程
+        else {
+            task.run();
+        }
     }
 
     public static <T> void loadCache(FetchInfo.FetchInfoParams params, Callback<T> callback,
                                      Fragment fragment) {
-        OkHttpClientProvider.getOkHttpClient().dispatcher().executorService().submit(() -> {
+        Runnable task = () -> {
             String responseData = getApiCache(params, fragment);
             if (!TextUtils.isEmpty(responseData)) {
                 JSONObject responseObject = JSON.parseObject(responseData);
@@ -67,15 +76,23 @@ public class YTApi {
                 if (success) {
                     String data = responseObject.getString("data");
                     T result = (T) JSON.parseObject(data, params.getClazz());
-                    runOnUiThread(() -> callback.onResponse(API_CODE_CACHE, result), fragment);
+                    onResponseExecute(callback, API_CODE_CACHE, result, fragment);
                 } else {
                     String msg = responseObject.getString("msg");
-                    runOnUiThread(() -> callback.onFailure(API_CODE_CACHE, msg), fragment);
+                    onFailureExecute(callback, API_CODE_CACHE, msg, fragment);
                 }
             } else {
-                runOnUiThread(() -> callback.onFailure(API_CODE_CACHE, "empty data "), fragment);
+                onFailureExecute(callback, API_CODE_CACHE, "empty data ", fragment);
             }
-        });
+        };
+        //当前为主线程
+        if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
+            OkHttpClientProvider.getOkHttpClient().dispatcher().executorService().submit(task);
+        }
+        //其他线程
+        else {
+            task.run();
+        }
 
     }
 
@@ -115,7 +132,7 @@ public class YTApi {
 
     private static <T> void onFetchFailure(IOException e, Callback<T> callback, Fragment fragment) {
         if (callback != null) {
-            runOnUiThread(() -> callback.onFailure(API_CODE_NET, e.getMessage()), fragment);
+            onFailureExecute(callback, API_CODE_NET, e.getMessage(), fragment);
         }
     }
 
@@ -132,7 +149,7 @@ public class YTApi {
             if (callback != null) {
                 String data = responseObject.getString("data");
                 T result = (T) JSON.parseObject(data, params.getClazz());
-                runOnUiThread(() -> callback.onResponse(API_CODE_NET, result), fragment);
+                onResponseExecute(callback, API_CODE_NET, result, fragment);
             }
             String ldv = MD5Util.MD5(responseData);
             saveApiCacheIfNeeded(params, responseObject, ldv, fragment);
@@ -203,20 +220,56 @@ public class YTApi {
         return null;
     }
 
-    private static void runOnUiThread(Runnable runnable, Fragment fragment) {
-        if (fragment != null
-                && fragment.getActivity() != null
-                && !fragment.getActivity().isFinishing()
-        ) {
-            fragment.getActivity().runOnUiThread(runnable);
+    private static void onFailureExecute(Callback callback, int code, String errorMsg, Fragment fragment) {
+        if (callback.runOnUiThread()) {
+            runOnUiThread(() -> callback.onFailure(code, errorMsg), fragment);
+        } else {
+            if (checkActivityValid(fragment)) {
+                callback.onFailure(code, errorMsg);
+            }
         }
     }
 
+    private static <T> void onResponseExecute(Callback<T> callback, int code, T result, Fragment fragment) {
+        if (callback.runOnUiThread()) {
+            runOnUiThread(() -> callback.onResponse(code, result), fragment);
+        } else {
+            if (checkActivityValid(fragment)) {
+                callback.onResponse(code, result);
+            }
+        }
+    }
 
-    public interface Callback<T> {
-        void onFailure(int code, String errorMsg);
+    private static void runOnUiThread(Runnable runnable, Fragment fragment) {
+        Activity activity = getSafeActivity(fragment);
+        if (activity != null) {
+            activity.runOnUiThread(runnable);
+        }
+    }
 
-        void onResponse(int code, T response);
+    private static boolean checkActivityValid(Fragment fragment) {
+        if (fragment == null) {
+            return false;
+        }
+        return fragment.getActivity() != null && !fragment.getActivity().isFinishing();
+    }
+
+    private static Activity getSafeActivity(Fragment fragment) {
+        if (fragment == null) {
+            return null;
+        }
+        Activity activity = fragment.getActivity();
+        return activity != null && !activity.isFinishing() ? activity : null;
+    }
+
+    public abstract static class Callback<T> {
+        public abstract void onFailure(int code, String errorMsg);
+
+        public abstract void onResponse(int code, T response);
+
+        public boolean runOnUiThread() {
+            return true;
+        }
     }
 
 }
