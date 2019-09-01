@@ -2,6 +2,7 @@ package com.yunti.clickread;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
 import com.cqtouch.entity.BaseType;

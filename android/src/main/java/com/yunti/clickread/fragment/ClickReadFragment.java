@@ -71,6 +71,10 @@ public class ClickReadFragment extends Fragment implements
     private boolean[] mRestoreCompleted = new boolean[]{true, true};
     private int mRestorePageIndex = -1;
 
+    public int getRestorePageIndex() {
+        return mRestorePageIndex;
+    }
+
     public boolean isBought() {
         return isBought;
     }
@@ -99,6 +103,9 @@ public class ClickReadFragment extends Fragment implements
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         FetchInfo.setHostAndApiCommonParameters(getArguments());
+        if (getArguments() != null) {
+            mRestorePageIndex = getArguments().getInt("restorePageIndex", -1);
+        }
         if (getContext() != null && getContext().getApplicationContext() != null) {
             mPlayerManager = new PlayerManager(this, getContext().getApplicationContext());
             mPlayerManager.setEventListener(this);
@@ -673,6 +680,12 @@ public class ClickReadFragment extends Fragment implements
     }
 
     private void restorePageIndex(RNYtClickreadModule.Callback callback) {
+        if (mRestorePageIndex != -1) {
+            mRestoreCompleted[0] = false;
+            mRestoreCompleted[1] = false;
+            callback.resolve(String.valueOf(mRestorePageIndex));
+            return;
+        }
         if (mClickReadDTO != null) {
             RNYtClickreadModule.getStorageItem(getContext(), getPageIndexKey(),
                     new RNYtClickreadModule.Callback() {
@@ -718,6 +731,11 @@ public class ClickReadFragment extends Fragment implements
 
     private ClickReadPageView getCurrentPageView() {
         return getPageView(mViewPager.getCurrentItem());
+    }
+
+    private Bundle getExtras(Bundle savedInstanceState) {
+        return savedInstanceState != null ?
+                savedInstanceState : getArguments();
     }
 
     public interface ClickReadFragmentDelegate {

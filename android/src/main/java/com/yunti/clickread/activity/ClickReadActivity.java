@@ -55,7 +55,7 @@ public class ClickReadActivity extends AppCompatActivity
                 = (ClickReadFragment) fragmentManager.findFragmentById(R.id.clickread_fragment);
         if (mClickReadFragment != null) {
             mClickReadFragment.setDelegate(this);
-            mClickReadFragment.setArguments(getIntent().getExtras());
+            mClickReadFragment.setArguments(getExtras(savedInstanceState));
         }
         mClickReadCatalogFragment
                 = (ClickReadCatalogFragment) fragmentManager.findFragmentById(R.id.catalog_fragment);
@@ -91,11 +91,6 @@ public class ClickReadActivity extends AppCompatActivity
 
             }
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
     }
 
     @Override
@@ -180,6 +175,22 @@ public class ClickReadActivity extends AppCompatActivity
 
     public void moveClickReadFragment() {
         mDrawer.closeDrawer(Gravity.LEFT);
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Bundle extras = getIntent().getExtras();
+        if (mClickReadFragment != null && extras != null) {
+            extras.putInt("restorePageIndex", mClickReadFragment.getRestorePageIndex());
+        }
+        outState.putAll(extras);
+    }
+
+    private Bundle getExtras(Bundle savedInstanceState) {
+        return savedInstanceState != null ?
+                savedInstanceState : getIntent().getExtras();
     }
 
     class MyRunnable implements Runnable {
