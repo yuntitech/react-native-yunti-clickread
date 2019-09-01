@@ -136,6 +136,7 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
     public void play(final ClickReadTrackinfo trackInfo) {
         //视频
         if (Integer.valueOf(1).equals(trackInfo.getType())) {
+            mPlayTrackInfo = trackInfo;
             RNYtClickreadModule.showVideo(mContext, mClickReadId, trackInfo);
         } else {
             Long prevResId = mPlayTrackInfo != null ? mPlayTrackInfo.getResId() : null;

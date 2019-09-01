@@ -140,6 +140,13 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         LocalBroadcastManager.getInstance(getReactApplicationContext()).sendBroadcast(intent);
     }
 
+    @ReactMethod
+    public void onVideoEnd() {
+        Intent intent = new Intent(ClickReadActivity.NAME);
+        intent.putExtra("action", "onVideoEnd");
+        LocalBroadcastManager.getInstance(getReactApplicationContext()).sendBroadcast(intent);
+    }
+
     public static void pushOrderHomeScreen(ClickReadDTO clickReadDTO, Context cxt) {
         if (cxt == null || clickReadDTO == null) {
             return;

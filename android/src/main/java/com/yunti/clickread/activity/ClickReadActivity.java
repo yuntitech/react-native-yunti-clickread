@@ -162,6 +162,11 @@ public class ClickReadActivity extends AppCompatActivity
                     mClickReadCatalogFragment.setTotalFileCount(totalFileCount);
                 }
                 break;
+            case "onVideoEnd":
+                if (mClickReadFragment != null) {
+                    mClickReadFragment.onTrackEnd();
+                }
+                break;
             default:
                 break;
         }
