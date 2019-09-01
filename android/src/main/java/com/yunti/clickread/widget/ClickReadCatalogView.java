@@ -113,25 +113,17 @@ public class ClickReadCatalogView extends YTLinearLayout {
         if (mAdapter.getCatalogs() == null) {
             return;
         }
-        int highLightIndex = -1;
-        int index = 0;
+        int highLightIndex = 0;
         for (ClickReadCatalogDTO catalogDTO : mAdapter.getCatalogs()) {
-            index++;
-            if (catalogDTO.getSections() != null) {
-                for (ClickReadCatalogDTO section : catalogDTO.getSections()) {
-                    index++;
-                    if (section.getPages() != null && section.getPages().contains(page)) {
-                        highLightIndex = index;
-                        break;
-                    }
+            if (ClickReadCatalogDTO.CLICKREADCATALOG_LEVEL_SECTION.equals(catalogDTO.getLevel())) {
+                if (catalogDTO.getPages() != null && catalogDTO.getPages().contains(page)) {
+                    break;
                 }
             }
+            highLightIndex++;
         }
-        highLightIndex--;
-        if (highLightIndex > 0 && highLightIndex < mAdapter.getItemCount()) {
-            mAdapter.highLight(highLightIndex);
-            mLayoutManager.scrollToPositionWithOffset(highLightIndex, 0);
-        }
+        mAdapter.highLight(highLightIndex);
+        mLayoutManager.scrollToPositionWithOffset(highLightIndex, 0);
     }
 
     public interface OperationCallback {

@@ -84,7 +84,7 @@ public class ClickReadCatalogAdapter extends RecyclerView.Adapter {
         ClickReadCatalogDTO catalog = mCatalogs.get(position);
         if (getItemViewType(position) == ITEM_TYPE_CHAPTER) {
             ChapterViewHolder mChapterViewHolder = (ChapterViewHolder) holder;
-            mChapterViewHolder.bind(catalog);
+            mChapterViewHolder.bind(catalog, position);
         } else {
             SectionViewHolder mSectionViewHolder = (SectionViewHolder) holder;
             mSectionViewHolder.bind(catalog);
@@ -111,15 +111,18 @@ public class ClickReadCatalogAdapter extends RecyclerView.Adapter {
         private ClickReadCatalogDTO mCatalog;
         private TextView mTvChapterPage;
         private ImageView mIvLock;
+        private View mDivider;
 
         private ChapterViewHolder(View itemView) {
             super(itemView);
             mTvChapterName = (TextView) itemView.findViewById(R.id.tv_chapter_name);
             mTvChapterPage = (TextView) itemView.findViewById(R.id.tv_chapter_page);
             mIvLock = (ImageView) itemView.findViewById(R.id.iv_chapter_lock);
+            mDivider = itemView.findViewById(R.id.view_divider);
         }
 
-        private void bind(ClickReadCatalogDTO catalog) {
+        private void bind(ClickReadCatalogDTO catalog, int position) {
+            mDivider.setVisibility(position == 0 ? View.INVISIBLE : View.VISIBLE);
             this.mCatalog = catalog;
             mTvChapterName.setText(catalog.getName());
             mTvChapterPage.setText(String.valueOf(catalog.getPageNo()));

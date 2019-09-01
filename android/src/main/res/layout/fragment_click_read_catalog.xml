@@ -15,6 +15,11 @@
         android:textColor="@color/color_33"
         android:textSize="@dimen/size_18" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/color_dd" />
+
     <com.yunti.clickread.widget.ClickReadCatalogView
         android:id="@+id/catalog_view"
         android:layout_width="match_parent"
