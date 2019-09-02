@@ -153,7 +153,8 @@ public class ClickReadActivity extends AppCompatActivity
                 break;
             case "userHasChanged":
                 if (mClickReadFragment != null) {
-                    mClickReadFragment.userHasChanged();
+                    mClickReadFragment.userHasChanged(intent.getBooleanExtra("isInBookShelf",
+                            false));
                 }
                 break;
             case "notifyDownloadTotalFileCount":

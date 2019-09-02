@@ -142,7 +142,9 @@ public class ClickReadFragment extends Fragment implements
     }
 
 
-    public void userHasChanged() {
+    public void userHasChanged(boolean isInBookShelf) {
+        mIsInBookShelf = isInBookShelf;
+        renderJoinBookShelfButton();
         if (mClickReadDTO != null) {
             fetchIsBuy(mClickReadDTO.getId(), false, null);
         }

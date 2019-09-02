@@ -132,9 +132,13 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void userHasChanged(ReadableMap params) {
-        FetchInfo.setHostAndApiCommonParameters(Arguments.toBundle(params));
+        Bundle bundle = Arguments.toBundle(params);
+        FetchInfo.setHostAndApiCommonParameters(bundle);
         Intent intent = new Intent(ClickReadActivity.NAME);
         intent.putExtra("action", "userHasChanged");
+        if (bundle != null) {
+            intent.putExtras(bundle);
+        }
         LocalBroadcastManager.getInstance(getReactApplicationContext()).sendBroadcast(intent);
     }
 
