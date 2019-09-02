@@ -24,7 +24,7 @@ public class YTDisplayHelper {
      * @return px value
      */
     public static int dpToPx(float dpValue) {
-        return (int) (dpValue * DENSITY + 0.5f);
+        return Math.round(dpValue * DENSITY + 0.5f);
     }
 
     /**

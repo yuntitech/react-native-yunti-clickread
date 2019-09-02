@@ -2,7 +2,6 @@ package com.yunti.clickread.fragment;
 
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,20 +28,18 @@ import com.yunti.clickread.RNYtClickreadModule;
 import com.yunti.clickread.Utils;
 import com.yunti.clickread.YTApi;
 import com.yunti.clickread.adapter.ClickReadPagerAdapter;
-import com.yunti.clickread.widget.YTLoadTipsView;
 import com.yunti.clickread.widget.ClickReadPageView;
 import com.yunti.clickread.widget.ClickReadThumbnailList;
 import com.yunti.clickread.widget.ClickReadTitleBar;
 import com.yunti.clickread.widget.JazzyViewPager;
 import com.yunti.clickread.widget.JoinBookShelfButton;
+import com.yunti.clickread.widget.YTLoadTipsView;
 import com.yunti.view.SnappingRecyclerView;
 
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import okhttp3.FormBody;
 
 
 public class ClickReadFragment extends Fragment implements
@@ -363,6 +360,17 @@ public class ClickReadFragment extends Fragment implements
         ClickReadPageView pageView = getCurrentPageView();
         if (pageView != null) {
             pageView.hideFrame();
+        }
+    }
+
+    public void onVideoEnd() {
+        ClickReadPageView pageView = getCurrentPageView();
+        if (pageView != null) {
+            pageView.hideFrame();
+        }
+        if (mPlayerManager.isPlayTracks()) {
+            mPlayerManager.stopTracks();
+            renderPlayTracks(R.drawable.selector_play_tracks_play);
         }
     }
 

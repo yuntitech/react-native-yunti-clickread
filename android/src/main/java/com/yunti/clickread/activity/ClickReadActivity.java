@@ -164,7 +164,7 @@ public class ClickReadActivity extends AppCompatActivity
                 break;
             case "onVideoEnd":
                 if (mClickReadFragment != null) {
-                    mClickReadFragment.onTrackEnd();
+                    mClickReadFragment.onVideoEnd();
                 }
                 break;
             default:
