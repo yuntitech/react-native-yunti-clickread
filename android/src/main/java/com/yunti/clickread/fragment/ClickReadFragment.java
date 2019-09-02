@@ -463,7 +463,7 @@ public class ClickReadFragment extends Fragment implements
             if (FetchInfo.isGuest()) {
                 RNYtClickreadModule.guestAlert(this);
             } else {
-                RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getContext());
+                RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getActivity());
             }
         } else if (viewId == R.id.img_back) {
             mDelegate.onBackClick();

@@ -261,7 +261,7 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
             if (FetchInfo.isGuest()) {
                 RNYtClickreadModule.guestAlert(this);
             } else {
-                RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getContext());
+                RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getActivity());
             }
         }, "购买后即可下载", "购买");
     }
@@ -280,7 +280,7 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
             } else {
                 RNYtClickreadModule.alert(this,
                         (dialog, which) ->
-                                RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getContext()),
+                                RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getActivity()),
                         R.string.tip_view_clickread_after_pay);
             }
         }
@@ -332,6 +332,9 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
 
 
     public void getAndRenderDownloadStatus() {
+        if (FetchInfo.isGuest()) {
+            return;
+        }
         RNYtClickreadModule.getStorageItem(getContext(),
                 getDownloadStatusKey(),
                 new RNYtClickreadModule.Callback() {

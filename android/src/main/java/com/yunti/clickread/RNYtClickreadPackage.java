@@ -13,15 +13,9 @@ import com.facebook.react.bridge.JavaScriptModule;
 
 public class RNYtClickreadPackage implements ReactPackage {
 
-    private Class mClass;
-
-    public void setClass(Class aClass) {
-        mClass = aClass;
-    }
-
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-        return Arrays.<NativeModule>asList(new RNYtClickreadModule(reactContext, mClass));
+        return Arrays.<NativeModule>asList(new RNYtClickreadModule(reactContext));
     }
 
     // Deprecated from RN 0.47

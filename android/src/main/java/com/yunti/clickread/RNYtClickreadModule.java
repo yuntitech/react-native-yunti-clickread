@@ -38,7 +38,6 @@ import java.util.List;
 public class RNYtClickreadModule extends ReactContextBaseJavaModule {
 
     private static final String NAME = "RNYtClickread";
-    private Class mClass;
     private final ReactApplicationContext reactContext;
     private DeviceEventManagerModule.RCTDeviceEventEmitter mDeviceEventEmitter;
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
@@ -52,10 +51,9 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
     };
 
 
-    public RNYtClickreadModule(ReactApplicationContext reactContext, Class clazz) {
+    public RNYtClickreadModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
-        mClass = clazz;
     }
 
     @Override
@@ -94,7 +92,7 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
     public void openClickReadActivity(ReadableMap params) {
         Activity activity = getCurrentActivity();
         if (activity != null) {
-            Intent intent = new Intent(activity, mClass);
+            Intent intent = new Intent(activity, ClickReadActivity.class);
             Bundle bundle = Arguments.toBundle(params);
             if (bundle != null) {
                 intent.putExtras(bundle);
@@ -107,7 +105,7 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
     public void reorderToFront(ReadableMap params) {
         Activity activity = getCurrentActivity();
         if (activity != null) {
-            Intent intent = new Intent(activity, mClass);
+            Intent intent = new Intent(activity, ClickReadActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             Bundle bundle = Arguments.toBundle(params);
             if (bundle != null) {
@@ -147,55 +145,54 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         LocalBroadcastManager.getInstance(getReactApplicationContext()).sendBroadcast(intent);
     }
 
-    public static void pushOrderHomeScreen(ClickReadDTO clickReadDTO, Context cxt) {
-        if (cxt == null || clickReadDTO == null) {
+    public static void pushOrderHomeScreen(ClickReadDTO clickReadDTO, Activity activity) {
+        if (activity == null || clickReadDTO == null) {
             return;
         }
         Long clickReadId = clickReadDTO.getId();
-        RNYtClickreadModule.push(cxt,
+        RNYtClickreadModule.push(activity,
                 "cn.bookln.ConfirmOrderHomeScreen", clickReadId, 8);
     }
 
-    public static void pushLoginScreen(Context cxt) {
-        if (cxt == null) {
+    public static void pushLoginScreen(Activity activity) {
+        if (activity == null) {
             return;
         }
         Bundle params = new Bundle();
         params.putString("screen", "cn.bookln.LoginScreen");
         params.putString("componentType", "screen");
-        RNYtClickreadModule.push(cxt, params);
+        RNYtClickreadModule.push(activity, params);
     }
 
-    public static void startNavigationActivity(Context cxt) {
+    public static void startNavigationActivity(Activity activity) {
         try {
-            Intent intent = new Intent();
             Class<?> clazz = Class.forName("com.reactnativenavigation.controllers.NavigationActivity");
-            intent.setClass(cxt, clazz);
+            Intent intent = new Intent(activity, clazz);
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            cxt.startActivity(intent);
+            activity.startActivity(intent);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
 
-    public static void push(Context cxt, String screen, Long bizId, int bizType) {
+    public static void push(Activity activity, String screen, Long bizId, int bizType) {
         Bundle params = new Bundle();
         params.putString("screen", screen);
         params.putLong("bizId", bizId);
         params.putInt("bizType", bizType);
-        push(cxt, params);
+        push(activity, params);
     }
 
-    public static void push(Context cxt, Bundle params) {
-        if (cxt == null) {
+    public static void push(Activity activity, Bundle params) {
+        if (activity == null) {
             return;
         }
         Intent intent = new Intent(RNYtClickreadModule.NAME);
         intent.putExtra("action", "push");
         intent.putExtras(params);
-        LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
-        startNavigationActivity(cxt);
+        LocalBroadcastManager.getInstance(activity.getApplicationContext()).sendBroadcast(intent);
+        startNavigationActivity(activity);
     }
 
     public static void pop(Context cxt) {
@@ -285,7 +282,7 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
 
     public static void guestAlert(Fragment fragment) {
         alert(fragment,
-                (dialog, which) -> RNYtClickreadModule.pushLoginScreen(fragment.getContext()),
+                (dialog, which) -> RNYtClickreadModule.pushLoginScreen(fragment.getActivity()),
                 "您需要登录后使用该功能", "登录");
     }
 
