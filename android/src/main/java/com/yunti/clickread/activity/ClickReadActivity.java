@@ -156,6 +156,9 @@ public class ClickReadActivity extends AppCompatActivity
                     mClickReadFragment.userHasChanged(intent.getBooleanExtra("isInBookShelf",
                             false));
                 }
+                if (mClickReadCatalogFragment != null) {
+                    mClickReadCatalogFragment.getAndRenderDownloadStatus();
+                }
                 break;
             case "notifyDownloadTotalFileCount":
                 if (mClickReadCatalogFragment != null) {
