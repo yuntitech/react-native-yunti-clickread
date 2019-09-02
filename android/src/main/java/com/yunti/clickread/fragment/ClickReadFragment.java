@@ -487,6 +487,9 @@ public class ClickReadFragment extends Fragment implements
                         mClickReadPages.size());
                 mPagerAdapter.setData(chargePages);
                 mClickReadThumbnailList.setData(chargePages, mClickReadDTO.getId());
+            } else {
+                mPagerAdapter.setData(mClickReadPages);
+                mClickReadThumbnailList.setData(mClickReadPages, mClickReadDTO.getId());
             }
             renderPage();
         }
