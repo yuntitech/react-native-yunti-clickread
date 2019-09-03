@@ -3,10 +3,7 @@ package com.yunti.clickread.widget;
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 import com.badoo.mobile.util.WeakHandler;
@@ -18,7 +15,6 @@ import com.yunti.view.SnappingRecyclerView;
 import com.yunti.view.YTRelativeLayout;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /*

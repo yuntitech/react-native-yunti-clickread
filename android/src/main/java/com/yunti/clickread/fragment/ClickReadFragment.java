@@ -418,7 +418,7 @@ public class ClickReadFragment extends Fragment implements
                     curPageView.splashClickArea();
                 }
                 if (!isScrollByThumbnail && isRestoreCompleted()) {
-                    mClickReadThumbnailList.scrollToPosition(position);
+                    scrollToPosition(position);
                 }
                 mRestoreCompleted[0] = true;
                 isScrollByThumbnail = false;
@@ -438,9 +438,12 @@ public class ClickReadFragment extends Fragment implements
             isScrollByThumbnail = true;
             mViewPager.setCurrentItem(position, false);
         } else if (!mRestoreCompleted[1]) {
+            if (!isBought) {
+                mRestoreCompleted[1] = true;
+                return;
+            }
             if (position != mRestorePageIndex) {
-                mViewPager.postDelayed(() -> mClickReadThumbnailList.scrollToPosition(mRestorePageIndex), 200);
-
+                mViewPager.postDelayed(() -> scrollToPosition(mRestorePageIndex), 200);
             }
             if (position == mRestorePageIndex) {
                 mRestoreCompleted[1] = true;
@@ -538,7 +541,7 @@ public class ClickReadFragment extends Fragment implements
             mPagerAdapter.setData(freePageList);
             mClickReadThumbnailList.setData(freePageList.subList(0, freePageList.size() - 1),
                     mClickReadDTO.getId());
-            mClickReadThumbnailList.scrollToPosition(mViewPager.getCurrentItem());
+            scrollToPosition(mViewPager.getCurrentItem());
             if (useFreeEndPageIndex == 0) {
                 setButtonsVisible(false);
             }
@@ -547,7 +550,7 @@ public class ClickReadFragment extends Fragment implements
         mClickReadThumbnailList.hideDelay();
         mViewPager.setCurrentItem(mRestorePageIndex, false);
         mViewPager.postDelayed(() -> {
-                    mClickReadThumbnailList.scrollToPosition(mRestorePageIndex);
+                    scrollToPosition(mRestorePageIndex);
                 },
                 300);
     }
@@ -734,6 +737,12 @@ public class ClickReadFragment extends Fragment implements
 
     private boolean isRestoreCompleted() {
         return mRestoreCompleted[0] && mRestoreCompleted[1];
+    }
+
+    private void scrollToPosition(int position) {
+        if (mClickReadThumbnailList.getCount() >= 1) {
+            mClickReadThumbnailList.scrollToPosition(Math.min(position, mClickReadThumbnailList.getCount() - 1));
+        }
     }
 
     private void runOnUiThread(Runnable runnable) {
