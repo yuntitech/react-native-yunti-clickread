@@ -7,11 +7,21 @@ import android.text.format.Formatter;
 import androidx.fragment.app.Fragment;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 public class Utils {
+
+    public static <O> List<O> subList(List<O> all, int start, int end) {
+        List<O> result = new ArrayList<>();
+        for (int n = start; n < end; n++) {
+            result.add(all.get(n));
+        }
+        return result;
+    }
 
     public static String fileSize(Long sizeBytes, Fragment fragment) {
         if (sizeBytes == null) {

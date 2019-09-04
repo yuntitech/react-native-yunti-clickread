@@ -141,8 +141,10 @@ public class ClickReadPageView extends RelativeLayout {
         mCRPageLoadTipsView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                showLoading();
-                setBookPage(mClickPage, position);
+                if (mClickPage != null) {
+                    showLoading();
+                    setBookPage(mClickPage, position);
+                }
             }
         });
 

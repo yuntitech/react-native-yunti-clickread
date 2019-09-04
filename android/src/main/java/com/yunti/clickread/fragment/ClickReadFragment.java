@@ -491,7 +491,7 @@ public class ClickReadFragment extends Fragment implements
         if (CollectionUtils.isNotEmpty(mClickReadPages)) {
             setButtonsVisible(true);
             if (mFreeEndPageIndex >= 0) {
-                List<ClickReadPage> chargePages = mClickReadPages.subList(mFreeEndPageIndex,
+                List<ClickReadPage> chargePages = Utils.subList(mClickReadPages, mFreeEndPageIndex,
                         mClickReadPages.size());
                 mPagerAdapter.setData(chargePages);
                 mClickReadThumbnailList.setData(chargePages, mClickReadDTO.getId());
@@ -534,15 +534,17 @@ public class ClickReadFragment extends Fragment implements
         } else {
             int useFreeEndPageIndex = Math.max(mFreeEndPageIndex, 0);
             List<ClickReadPage> freePageList = new ArrayList<>();
-            for (int n = 0; n < useFreeEndPageIndex; n++) {
-                freePageList.add(mClickReadPages.get(n));
+            if (CollectionUtils.isNotEmpty(mClickReadPages)) {
+                for (int n = 0; n < useFreeEndPageIndex; n++) {
+                    freePageList.add(mClickReadPages.get(n));
+                }
             }
             ClickReadPage fakePage = new ClickReadPage();
             fakePage.setAuthVal(mClickReadDTO.getAuthVal());
             fakePage.setId(-1L);
             freePageList.add(fakePage);
             mPagerAdapter.setData(freePageList);
-            mClickReadThumbnailList.setData(freePageList.subList(0, freePageList.size() - 1),
+            mClickReadThumbnailList.setData(Utils.subList(freePageList, 0, freePageList.size() - 1),
                     mClickReadDTO.getId());
             scrollToPosition(mViewPager.getCurrentItem());
             if (useFreeEndPageIndex == 0) {
