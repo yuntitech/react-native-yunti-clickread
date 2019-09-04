@@ -213,17 +213,17 @@ public class ClickReadFragment extends Fragment implements
     }
 
 
-    private void renderMaybeKnowIsBuy(ClickReadDTO response) {
+    private void renderMaybeKnowIsBuy(ClickReadDTO clickReadDTO) {
         if (fromStudyPlan) {
             render();
         } else {
-            fetchIsBuy(response.getId(), true, new YTApi.Callback<BuyResultDTO>() {
+            fetchIsBuy(clickReadDTO.getId(), true, new YTApi.Callback<BuyResultDTO>() {
 
                 @Override
                 public void onFailure(int code, String errorMsg) {
                     if (YTApi.API_CODE_CACHE == code) {
                         render();
-                        fetchIsBuy(response.getId(), false, this);
+                        fetchIsBuy(clickReadDTO.getId(), false, this);
                     }
                 }
 
@@ -233,6 +233,9 @@ public class ClickReadFragment extends Fragment implements
                         case YTApi.API_CODE_CACHE:
                             isBought = response.isBuySuccess();
                             render();
+                            if (!isBought) {
+                                fetchIsBuy(clickReadDTO.getId(), false, this);
+                            }
                             break;
                         case YTApi.API_CODE_NET:
                             onIsBuyResponse(response);
