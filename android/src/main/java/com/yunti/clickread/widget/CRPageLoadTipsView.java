@@ -47,6 +47,7 @@ public class CRPageLoadTipsView extends YTFrameLayout {
         setEnabled(true);
         mLoadTips.setText("图片加载失败");
         mProgressBar.setVisibility(View.INVISIBLE);
+        mLoadTips.setVisibility(View.VISIBLE);
     }
 
     public void hide() {
