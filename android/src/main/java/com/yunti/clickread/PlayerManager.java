@@ -300,16 +300,21 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
 
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+        if (!playWhenReady) {
+            return;
+        }
         switch (playbackState) {
             case Player.STATE_IDLE:
                 break;
             case Player.STATE_BUFFERING:
                 break;
             case Player.STATE_READY:
+                mProgressHandler.removeMessages(SHOW_PROGRESS);
                 mProgressHandler.sendEmptyMessage(SHOW_PROGRESS);
                 break;
             case Player.STATE_ENDED:
                 mProgressHandler.removeMessages(SHOW_PROGRESS);
+                onTrackEnd();
                 break;
         }
     }
