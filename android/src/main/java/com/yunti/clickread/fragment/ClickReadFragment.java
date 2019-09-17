@@ -233,9 +233,7 @@ public class ClickReadFragment extends Fragment implements
                         case YTApi.API_CODE_CACHE:
                             isBought = response.isBuySuccess();
                             render();
-                            if (!isBought) {
-                                fetchIsBuy(clickReadDTO.getId(), false, this);
-                            }
+                            fetchIsBuy(clickReadDTO.getId(), false, this);
                             break;
                         case YTApi.API_CODE_NET:
                             onIsBuyResponse(response);
@@ -273,13 +271,26 @@ public class ClickReadFragment extends Fragment implements
         }
     }
 
-    private void onIsBuyResponse(BuyResultDTO response) {
-        if (isBought) {
+    private void onIsBuyResponse(BuyResultDTO netResponse) {
+        boolean prevIsBought = isBought;
+        if (prevIsBought && netResponse.isBuySuccess()) {
             return;
         }
-        isBought = response.isBuySuccess();
+        isBought = netResponse.isBuySuccess();
         if (isBought) {
             buySuccess();
+        }
+        //退款的情况
+        else if (prevIsBought) {
+            mPagerAdapter.setBuyViewTag(Math.max(mFreeEndPageIndex, 0));
+            mRestoreCompleted[0] = true;
+            mRestoreCompleted[1] = true;
+            mRestorePageIndex = Math.max(mFreeEndPageIndex - 1, 0);
+            mViewPager.setCurrentItem(mRestorePageIndex);
+            renderFreePages();
+            if (mDelegate != null) {
+                mDelegate.onBuyResult(isBought);
+            }
         }
     }
 
@@ -532,32 +543,36 @@ public class ClickReadFragment extends Fragment implements
         if (isBought) {
             buySuccess();
         } else {
-            int useFreeEndPageIndex = Math.max(mFreeEndPageIndex, 0);
-            List<ClickReadPage> freePageList = new ArrayList<>();
-            if (CollectionUtils.isNotEmpty(mClickReadPages)) {
-                for (int n = 0; n < useFreeEndPageIndex; n++) {
-                    freePageList.add(mClickReadPages.get(n));
-                }
-            }
-            ClickReadPage fakePage = new ClickReadPage();
-            fakePage.setAuthVal(mClickReadDTO.getAuthVal());
-            fakePage.setId(-1L);
-            freePageList.add(fakePage);
-            mPagerAdapter.setData(freePageList);
-            mClickReadThumbnailList.setData(Utils.subList(freePageList, 0, freePageList.size() - 1),
-                    mClickReadDTO.getId());
-            scrollToPosition(mViewPager.getCurrentItem());
-            if (useFreeEndPageIndex == 0) {
-                setButtonsVisible(false);
-            }
+            renderFreePages();
         }
-        renderPage();
         mClickReadThumbnailList.hideDelay();
         mViewPager.setCurrentItem(mRestorePageIndex, false);
         mViewPager.postDelayed(() -> {
                     scrollToPosition(mRestorePageIndex);
                 },
                 300);
+    }
+
+    private void renderFreePages() {
+        int useFreeEndPageIndex = Math.max(mFreeEndPageIndex, 0);
+        List<ClickReadPage> freePageList = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(mClickReadPages)) {
+            for (int n = 0; n < useFreeEndPageIndex; n++) {
+                freePageList.add(mClickReadPages.get(n));
+            }
+        }
+        ClickReadPage fakePage = new ClickReadPage();
+        fakePage.setAuthVal(mClickReadDTO.getAuthVal());
+        fakePage.setId(-1L);
+        freePageList.add(fakePage);
+        mPagerAdapter.setData(freePageList);
+        mClickReadThumbnailList.setData(Utils.subList(freePageList, 0, freePageList.size() - 1),
+                mClickReadDTO.getId());
+        scrollToPosition(mViewPager.getCurrentItem());
+        if (useFreeEndPageIndex == 0) {
+            setButtonsVisible(false);
+        }
+        renderPage();
     }
 
 

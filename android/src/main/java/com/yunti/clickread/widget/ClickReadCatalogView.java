@@ -36,6 +36,8 @@ public class ClickReadCatalogView extends YTLinearLayout {
     private LinearLayoutManager mLayoutManager;
 
     private Context mContext;
+    private List<ClickReadCatalogDTO> mChapters;
+    private boolean isBookFree;
 
     public void setSectionItemClickListener(ClickReadCatalogAdapter.OnSectionItemClickListener
                                                     sectionItemClickListener) {
@@ -72,8 +74,29 @@ public class ClickReadCatalogView extends YTLinearLayout {
     }
 
     public void refresh(List<ClickReadCatalogDTO> chapters, boolean isBookFree) {
-        List<ClickReadCatalogDTO> catalogs = new ArrayList<>();
+        this.mChapters = chapters;
+        this.isBookFree = isBookFree;
+        mAdapter.setData(createCatalogs(chapters), isBookFree);
+        if (mHighLightPage != null) {
+            highLightCurSection(mHighLightPage);
+        }
+    }
 
+    public void buyResult(boolean isBought) {
+        if (mAdapter != null) {
+            if (isBought) {
+                CollectionUtils.filterInverse(mAdapter.getCatalogs(),
+                        catalog -> ClickReadCatalogDTO.CRCODE_AUTH_CODE_BOOK_SHIDUCRCODE
+                                .equals(catalog.getAuthType()));
+            } else if (mChapters != null) {
+                mAdapter.setData(createCatalogs(mChapters), isBookFree);
+            }
+            mAdapter.refresh(isBought);
+        }
+    }
+
+    private List<ClickReadCatalogDTO> createCatalogs(List<ClickReadCatalogDTO> chapters) {
+        List<ClickReadCatalogDTO> catalogs = new ArrayList<>();
         //记录父节点的位置
         List<Integer> mParentCatalogIndexList = new ArrayList<>();
         for (ClickReadCatalogDTO catalog : chapters) {
@@ -93,19 +116,7 @@ public class ClickReadCatalogView extends YTLinearLayout {
             }
 
         }
-        mAdapter.setData(catalogs, isBookFree);
-        if (mHighLightPage != null) {
-            highLightCurSection(mHighLightPage);
-        }
-    }
-
-    public void buySuccess() {
-        if (mAdapter != null) {
-            CollectionUtils.filterInverse(mAdapter.getCatalogs(),
-                    catalog -> ClickReadCatalogDTO.CRCODE_AUTH_CODE_BOOK_SHIDUCRCODE
-                            .equals(catalog.getAuthType()));
-            mAdapter.refresh(true);
-        }
+        return catalogs;
     }
 
     public void highLightCurSection(ClickReadPage page) {

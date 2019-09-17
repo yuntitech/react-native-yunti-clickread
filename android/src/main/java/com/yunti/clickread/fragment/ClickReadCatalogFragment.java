@@ -106,8 +106,8 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
         return sb.toString();
     }
 
-    public void buySuccess() {
-        mCatalogView.buySuccess();
+    public void buyResult(boolean isBought) {
+        mCatalogView.buyResult(isBought);
     }
 
     public void refresh(ClickReadDTO clickReadDTO) {
@@ -271,7 +271,8 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
         if (mDelegate == null) {
             return;
         }
-        if (mDelegate.isBought()) {
+        if (mDelegate.isBought() ||
+                ClickReadCatalogDTO.CRCODE_AUTH_CODE_BOOK_SHIDUCRCODE.equals(section.getAuthType())) {
             mCatalogView.highLightCurSection(section.getPages().get(0));
             goCatalogSectionPage(section.getPages().get(0));
         } else {

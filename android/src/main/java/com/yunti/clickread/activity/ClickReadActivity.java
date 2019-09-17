@@ -108,8 +108,8 @@ public class ClickReadActivity extends AppCompatActivity
 
     @Override
     public void onBuyResult(boolean isBought) {
-        if (mClickReadCatalogFragment != null && isBought) {
-            mClickReadCatalogFragment.buySuccess();
+        if (mClickReadCatalogFragment != null) {
+            mClickReadCatalogFragment.buyResult(isBought);
         }
     }
 

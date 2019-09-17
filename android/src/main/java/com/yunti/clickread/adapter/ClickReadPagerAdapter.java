@@ -32,6 +32,10 @@ public class ClickReadPagerAdapter extends PagerAdapter {
     public final static String TAG_VIEW = "pager_view_";
     private String mBuyViewTag;
 
+    public void setBuyViewTag(int position) {
+        this.mBuyViewTag = TAG_VIEW + position;
+    }
+
     public ClickReadPagerAdapter(Context context, JazzyViewPager jazzy) {
         this.mContext = context;
         this.mJazzy = jazzy;
