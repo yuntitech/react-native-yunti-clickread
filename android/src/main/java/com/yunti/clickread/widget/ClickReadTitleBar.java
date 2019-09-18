@@ -38,6 +38,7 @@ public class ClickReadTitleBar extends YTLinearLayout {
         mClickArea = findViewById(R.id.btn_click_area);
         mBuy = findViewById(R.id.btn_buy);
         mClickArea.setEnabled(false);
+        setVisibility(View.INVISIBLE);
     }
 
 

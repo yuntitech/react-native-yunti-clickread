@@ -291,6 +291,7 @@ public class ClickReadFragment extends Fragment implements
             if (mDelegate != null) {
                 mDelegate.onBuyResult(isBought);
             }
+            mTitleBar.setBuyButtonVisible(!isBought);
         }
     }
 
@@ -540,6 +541,7 @@ public class ClickReadFragment extends Fragment implements
 
     private void render() {
         mCRLoadTipsView.hide();
+        mTitleBar.setVisibility(View.VISIBLE);
         if (isBought) {
             buySuccess();
         } else {
