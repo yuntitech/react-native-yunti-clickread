@@ -221,20 +221,6 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         }
     }
 
-    private void sendRequest(ClickReadTrackinfo trackInfo, Callback apiCallback) {
-        FetchInfo.FetchInfoParams fetchInfoParams = FetchInfo.playV3(trackInfo.getResId(),
-                trackInfo.getResSign());
-        for (int n = 0; n < fetchInfoParams.getFormBody().size(); n++) {
-            String name = fetchInfoParams.getFormBody().name(n);
-            String val = fetchInfoParams.getFormBody().value(n);
-        }
-        Request request = new Request.Builder()
-                .post(fetchInfoParams.getFormBody())
-                .url(fetchInfoParams.getUrl())
-                .build();
-        mClient.newCall(request).enqueue(apiCallback);
-    }
-
     private void onProgress(long currentPosition) {
         if (mPlayTrackInfo != null
                 && mPlayTrackInfo.getPe() != null
@@ -307,14 +293,23 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
             case Player.STATE_IDLE:
                 break;
             case Player.STATE_BUFFERING:
+                if (mEventListener != null) {
+                    mEventListener.onLoading();
+                }
                 break;
             case Player.STATE_READY:
                 mProgressHandler.removeMessages(SHOW_PROGRESS);
                 mProgressHandler.sendEmptyMessage(SHOW_PROGRESS);
+                if (mEventListener != null) {
+                    mEventListener.onLoadEnd();
+                }
                 break;
             case Player.STATE_ENDED:
                 mProgressHandler.removeMessages(SHOW_PROGRESS);
                 onTrackEnd();
+                if (mEventListener != null) {
+                    mEventListener.onLoadEnd();
+                }
                 break;
         }
     }
@@ -357,6 +352,10 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         void onTrackEnd();
 
         void onSwitchTrack(ClickReadTrackinfo trackInfo);
+
+        void onLoading();
+
+        void onLoadEnd();
     }
 
 }

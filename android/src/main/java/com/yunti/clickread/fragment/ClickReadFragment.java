@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
+import com.badoo.mobile.util.WeakHandler;
 import com.cqtouch.entity.BaseType;
 import com.yt.ytdeep.client.dto.BuyResultDTO;
 import com.yt.ytdeep.client.dto.ClickReadCatalogDTO;
@@ -70,6 +71,14 @@ public class ClickReadFragment extends Fragment implements
     private boolean mPlayTracksPageChanged = false;
     private boolean[] mRestoreCompleted = new boolean[]{true, true};
     private int mRestorePageIndex = -1;
+    private static int AUDIO_LOAD_MSG = 1;
+    private WeakHandler mAudioLoadingHandler = new WeakHandler(msg -> {
+        ClickReadPageView pageView = getCurrentPageView();
+        if (pageView != null) {
+            pageView.showTrackLoading();
+        }
+        return false;
+    });
 
     public int getRestorePageIndex() {
         return mRestorePageIndex;
@@ -95,6 +104,7 @@ public class ClickReadFragment extends Fragment implements
         if (mPlayerManager != null) {
             mPlayerManager.release();
         }
+        mAudioLoadingHandler.removeMessages(AUDIO_LOAD_MSG);
         storePageIndex();
         super.onDestroy();
     }
@@ -402,6 +412,23 @@ public class ClickReadFragment extends Fragment implements
         ClickReadPageView pageView = getCurrentPageView();
         if (pageView != null) {
             pageView.switchTrack(trackInfo);
+        }
+    }
+
+    @Override
+    public void onLoading() {
+        if (mAudioLoadingHandler.hasMessages(AUDIO_LOAD_MSG)) {
+            mAudioLoadingHandler.removeMessages(AUDIO_LOAD_MSG);
+        }
+        mAudioLoadingHandler.sendEmptyMessageDelayed(AUDIO_LOAD_MSG, 300);
+    }
+
+    @Override
+    public void onLoadEnd() {
+        mAudioLoadingHandler.removeMessages(AUDIO_LOAD_MSG);
+        ClickReadPageView pageView = getCurrentPageView();
+        if (pageView != null) {
+            pageView.hideTrackLoading();
         }
     }
 

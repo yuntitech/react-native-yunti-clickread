@@ -303,6 +303,17 @@ public class ClickReadPageView extends RelativeLayout {
         mCRPageLoadTipsView.showLoading();
     }
 
+    public void showTrackLoading() {
+        if (mCurFrame != null) {
+            mCRPageLoadTipsView.showTrackLoading(mCurFrame);
+        }
+    }
+
+    public void hideTrackLoading() {
+        mCRPageLoadTipsView.hide();
+    }
+
+
     public void showLoadFail() {
         mCRPageLoadTipsView.showError();
         isLoadImageSuccess = false;

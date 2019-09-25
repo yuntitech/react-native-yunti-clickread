@@ -8,6 +8,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.yunti.clickread.R;
+import com.yunti.util.YTDisplayHelper;
 import com.yunti.view.YTFrameLayout;
 
 /*
@@ -36,6 +37,7 @@ public class YTLoadTipsView extends YTFrameLayout {
         mLoadTips = findViewById(R.id.tv_load_tips);
         mProgressBar = findViewById(R.id.view_progress);
         mTipsContainer = findViewById(R.id.ll_tips_container);
+        YTDisplayHelper.setProgressTint(mProgressBar, R.color.color_purple);
     }
 
     public void showLoading() {

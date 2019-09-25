@@ -1,9 +1,14 @@
 package com.yunti.util;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.os.Build;
+import android.widget.ProgressBar;
 
 import androidx.core.content.ContextCompat;
+
+import com.yunti.clickread.R;
 
 public class YTDisplayHelper {
 
@@ -35,5 +40,12 @@ public class YTDisplayHelper {
      */
     public static int pxToDp(float pxValue) {
         return (int) (pxValue / DENSITY + 0.5f);
+    }
+
+    public static void setProgressTint(ProgressBar progressBar, int color) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            progressBar.setIndeterminateTintList(
+                    ColorStateList.valueOf(ContextCompat.getColor(progressBar.getContext(), color)));
+        }
     }
 }
