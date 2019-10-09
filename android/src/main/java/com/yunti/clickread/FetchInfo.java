@@ -132,7 +132,7 @@ public class FetchInfo {
             apiCommonParameters.put("_appv", getLongValue(apiCommonBundle, "_appv"));
             apiCommonParameters.put("_appt", apiCommonBundle.getString("_appt"));
             apiCommonParameters.put("_templateid", getLongValue(apiCommonBundle, "_templateid"));
-            apiCommonParameters.put("_appid", apiCommonBundle.getString("_appid"));
+            apiCommonParameters.put("_appid", getLongValue(apiCommonBundle, "_appid"));
             apiCommonParameters.put("_userId", getLongValue(apiCommonBundle, "_userId"));
             apiCommonParameters.put("_tid", apiCommonBundle.getString("_tid"));
         }
