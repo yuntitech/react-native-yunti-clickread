@@ -347,6 +347,7 @@ public class ClickReadFragment extends Fragment implements
     @Override
     public void onClickHotArea(ClickReadTrackinfo track) {
         if (mPlayerManager != null) {
+            stopPlayTracksIfNeeded();
             mPlayerManager.play(track);
         }
     }
@@ -354,6 +355,7 @@ public class ClickReadFragment extends Fragment implements
     @Override
     public void onClickSameArea() {
         if (mPlayerManager != null) {
+            stopPlayTracksIfNeeded();
             mPlayerManager.playAgain();
         }
     }
@@ -390,14 +392,19 @@ public class ClickReadFragment extends Fragment implements
         }
     }
 
-    public void onVideoEnd() {
+    public void onVideoClose(boolean fromUser) {
         ClickReadPageView pageView = getCurrentPageView();
         if (pageView != null) {
             pageView.hideFrame();
         }
-        if (mPlayerManager.isPlayTracks()) {
-            mPlayerManager.stopTracks();
-            renderPlayTracks(R.drawable.selector_play_tracks_play);
+        if (fromUser) {
+            stopPlayTracksIfNeeded();
+        }
+    }
+
+    public void onVideoTrackEnd() {
+        if (mPlayerManager != null) {
+            mPlayerManager.onTrackEnd();
         }
     }
 
@@ -629,9 +636,8 @@ public class ClickReadFragment extends Fragment implements
             playTracks();
             RNYtClickreadModule.showToast(getContext(), R.string.start_read);
         } else {
-            mPlayerManager.stopTracks();
+            stopPlayTracksIfNeeded();
             RNYtClickreadModule.showToast(getContext(), R.string.read_has_stopped);
-            renderPlayTracks(R.drawable.selector_play_tracks_play);
         }
     }
 
@@ -645,8 +651,8 @@ public class ClickReadFragment extends Fragment implements
             mPlayTracks.setImageResource(R.drawable.ic_play_tracks);
             mPlayerManager.playTracks(tracks);
         } else {
-            mPlayerManager.stopTracks();
-            renderPlayTracks(R.drawable.selector_play_tracks_play);
+            stopPlayTracksIfNeeded();
+            mPlayerManager.dismissVideoLightBoxIfNeeded(null);
         }
     }
 
@@ -661,6 +667,13 @@ public class ClickReadFragment extends Fragment implements
                 pageView.hideClickArea();
             }
 
+        }
+    }
+
+    private void stopPlayTracksIfNeeded() {
+        if (mPlayerManager != null && mPlayerManager.isPlayTracks()) {
+            mPlayerManager.stopTracks();
+            renderPlayTracks(R.drawable.selector_play_tracks_play);
         }
     }
 
@@ -708,8 +721,7 @@ public class ClickReadFragment extends Fragment implements
         if (mPlayTracksPageChanged) {
             mPlayTracksPageChanged = false;
             if (stopPlay) {
-                mPlayerManager.stopTracks();
-                renderPlayTracks(R.drawable.selector_play_tracks_play);
+                stopPlayTracksIfNeeded();
             } else {
                 playTracks();
             }

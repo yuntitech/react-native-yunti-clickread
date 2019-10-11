@@ -74,8 +74,10 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         @Override
         public boolean handleMessage(Message msg) {
             if (mPlayer != null) {
-                onProgress(mPlayer.getCurrentPosition());
-                mProgressHandler.sendEmptyMessageDelayed(SHOW_PROGRESS, mProgressUpdateInterval);
+                boolean msgContinue = onProgress(mPlayer.getCurrentPosition());
+                if (msgContinue) {
+                    mProgressHandler.sendEmptyMessageDelayed(SHOW_PROGRESS, mProgressUpdateInterval);
+                }
             }
             return false;
         }
@@ -134,10 +136,13 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
     }
 
     public void play(final ClickReadTrackinfo trackInfo) {
+        dismissVideoLightBoxIfNeeded(trackInfo);
         //视频
-        if (Integer.valueOf(1).equals(trackInfo.getType())) {
+        if (isVideoType(trackInfo)) {
+            boolean isContinuousVideo = isVideoType(mPlayTrackInfo);
+            mPlayer.setPlayWhenReady(false);
             mPlayTrackInfo = trackInfo;
-            RNYtClickreadModule.showVideo(mContext, mClickReadId, trackInfo);
+            RNYtClickreadModule.showVideo(mContext, mClickReadId, trackInfo, isPlayTracks(), isContinuousVideo);
         } else {
             Long prevResId = mPlayTrackInfo != null ? mPlayTrackInfo.getResId() : null;
             mPlayTrackInfo = trackInfo;
@@ -204,7 +209,6 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         MediaSource contentMediaSource = buildMediaSource(Uri.parse(uri));
         mPlayer.prepare(contentMediaSource);
         seekTo(trackInfo);
-        mPlayer.setPlayWhenReady(true);
     }
 
     // Internal methods.
@@ -221,15 +225,17 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         }
     }
 
-    private void onProgress(long currentPosition) {
+    private boolean onProgress(long currentPosition) {
         if (mPlayTrackInfo != null
                 && mPlayTrackInfo.getPe() != null
                 && currentPosition > mPlayTrackInfo.getPe()) {
             onTrackEnd();
+            return false;
         }
+        return true;
     }
 
-    private void onTrackEnd() {
+    public void onTrackEnd() {
         mProgressHandler.removeMessages(SHOW_PROGRESS);
         if (mEventListener != null) {
             mEventListener.onTrackEnd();
@@ -261,6 +267,7 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
                 && trackInfo != null
                 && trackInfo.getPs() != null) {
             mPlayer.seekTo(trackInfo.getPs());
+            mPlayer.setPlayWhenReady(true);
         }
     }
 
@@ -268,6 +275,19 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         if (mEventListener != null) {
             mEventListener.onSwitchTrack(trackInfo);
         }
+    }
+
+    public void dismissVideoLightBoxIfNeeded(ClickReadTrackinfo trackInfo) {
+        //上一个track为视频当前这个不是
+        if (isVideoType(mPlayTrackInfo)) {
+            if (trackInfo == null || !Integer.valueOf(1).equals(trackInfo.getType())) {
+                RNYtClickreadModule.dismissVideoLightBox(mContext);
+            }
+        }
+    }
+
+    private boolean isVideoType(ClickReadTrackinfo trackInfo) {
+        return trackInfo != null && Integer.valueOf(1).equals(trackInfo.getType());
     }
 
     @Override

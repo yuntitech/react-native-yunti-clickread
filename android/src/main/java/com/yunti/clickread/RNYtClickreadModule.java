@@ -143,9 +143,17 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void onVideoEnd() {
+    public void onVideoClose(boolean fromUser) {
         Intent intent = new Intent(ClickReadActivity.NAME);
-        intent.putExtra("action", "onVideoEnd");
+        intent.putExtra("action", "onVideoClose");
+        intent.putExtra("fromUser", fromUser);
+        LocalBroadcastManager.getInstance(getReactApplicationContext()).sendBroadcast(intent);
+    }
+
+    @ReactMethod
+    public void onVideoTrackEnd() {
+        Intent intent = new Intent(ClickReadActivity.NAME);
+        intent.putExtra("action", "onVideoTrackEnd");
         LocalBroadcastManager.getInstance(getReactApplicationContext()).sendBroadcast(intent);
     }
 
@@ -238,7 +246,8 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
     }
 
-    public static void showVideo(Context cxt, long crId, ClickReadTrackinfo track) {
+    public static void showVideo(Context cxt, long crId, ClickReadTrackinfo track,
+                                 boolean isPlayTracks, boolean isContinuousVideo) {
         if (cxt == null || track == null) {
             return;
         }
@@ -246,6 +255,17 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         intent.putExtra("action", "video");
         intent.putExtra("crId", crId);
         intent.putExtra("trackJSON", JSON.toJSONString(track));
+        intent.putExtra("isPlayTracks", isPlayTracks);
+        intent.putExtra("isContinuousVideo", isContinuousVideo);
+        LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
+    }
+
+    public static void dismissVideoLightBox(Context cxt) {
+        if (cxt == null) {
+            return;
+        }
+        Intent intent = new Intent(RNYtClickreadModule.NAME);
+        intent.putExtra("action", "dismissVideoLightBox");
         LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
     }
 
