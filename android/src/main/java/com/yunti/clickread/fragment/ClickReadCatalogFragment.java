@@ -20,11 +20,13 @@ import androidx.fragment.app.Fragment;
 
 import com.alibaba.fastjson.JSON;
 import com.badoo.mobile.util.WeakHandler;
+import com.tencent.stat.StatService;
 import com.yt.ytdeep.client.dto.ClickReadCatalogDTO;
 import com.yt.ytdeep.client.dto.ClickReadDTO;
 import com.yt.ytdeep.client.dto.ClickReadPage;
 import com.yt.ytdeep.client.dto.ClickReadTrackinfo;
 import com.yunti.clickread.FetchInfo;
+import com.yunti.clickread.MTAHelper;
 import com.yunti.clickread.R;
 import com.yunti.clickread.RNYtClickreadModule;
 import com.yunti.clickread.Utils;
@@ -258,12 +260,16 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
 
     private void buyAlert() {
         RNYtClickreadModule.alert(this, (dialog, which) -> {
-            if (FetchInfo.isGuest()) {
-                RNYtClickreadModule.guestAlert(this);
-            } else {
-                RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getActivity());
-            }
-        }, "购买后即可下载", "购买");
+                    if (FetchInfo.isGuest()) {
+                        RNYtClickreadModule.guestAlert(this);
+                    } else {
+                        RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getActivity());
+                        MTAHelper.mtaTrackEvent(getContext(), MTAHelper.bl_009.setId(mClickReadDTO));
+                    }
+                }, "购买后即可下载", "购买", (dialog, which)
+                        -> MTAHelper.mtaTrackEvent(getContext(), MTAHelper.bl_010.setId(mClickReadDTO))
+        );
+        MTAHelper.mtaTrackEvent(getContext(), MTAHelper.bl_008.setId(mClickReadDTO));
     }
 
     @Override
@@ -280,9 +286,14 @@ public class ClickReadCatalogFragment extends Fragment implements ClickReadCatal
                 RNYtClickreadModule.guestAlert(this);
             } else {
                 RNYtClickreadModule.alert(this,
-                        (dialog, which) ->
-                                RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getActivity()),
-                        R.string.tip_view_clickread_after_pay);
+                        (dialog, which) -> {
+                            RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getActivity());
+                            MTAHelper.mtaTrackEvent(getContext(), MTAHelper.bl_009.setId(mClickReadDTO));
+                        },
+                        R.string.tip_view_clickread_after_pay, (dialog, which)
+                                -> MTAHelper.mtaTrackEvent(getContext(), MTAHelper.bl_010.setId(mClickReadDTO))
+                );
+                MTAHelper.mtaTrackEvent(getContext(), MTAHelper.bl_008.setId(mClickReadDTO));
             }
         }
     }

@@ -66,4 +66,8 @@ dependencies {
     }
     implementation 'com.afollestad.material-dialogs:core:0.9.4.5'
     implementation project(':@react-native-community_async-storage')
+    //mta 3.3 稳定版
+    api 'com.qq.mta:mta:3.3.1-release'
+    //mid  jar包 必须添加
+    api 'com.tencent.mid:mid:3.73-release'
 }

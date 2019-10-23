@@ -297,31 +297,35 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
     }
 
     public static void alert(Fragment fragment,
-                             MaterialDialog.SingleButtonCallback positiveCallback, int content) {
+                             MaterialDialog.SingleButtonCallback positiveCallback, int content,
+                             MaterialDialog.SingleButtonCallback negativeCallback) {
         if (fragment == null) {
             return;
         }
-        alert(fragment, positiveCallback, fragment.getString(content), "确定");
+        alert(fragment, positiveCallback, fragment.getString(content), "确定", negativeCallback);
     }
 
     public static void guestAlert(Fragment fragment) {
         alert(fragment,
                 (dialog, which) -> RNYtClickreadModule.pushLoginScreen(fragment.getActivity()),
-                "您需要登录后使用该功能", "登录");
+                "您需要登录后使用该功能", "登录", null);
     }
 
     public static void alert(Fragment fragment,
                              MaterialDialog.SingleButtonCallback positiveCallback, String content,
-                             String positiveText) {
+                             String positiveText, MaterialDialog.SingleButtonCallback negativeCallback) {
         Activity activity = fragment.getActivity();
         if (activity != null && !activity.isFinishing()) {
-            new MaterialDialog.Builder(activity)
+            MaterialDialog.Builder dialogBuilder = new MaterialDialog.Builder(activity)
                     .title("提示")
                     .content(content)
                     .positiveText(positiveText)
                     .negativeText("取消")
-                    .onPositive(positiveCallback)
-                    .show();
+                    .onPositive(positiveCallback);
+            if (negativeCallback != null) {
+                dialogBuilder.onNegative(negativeCallback);
+            }
+            dialogBuilder.show();
         }
     }
 
