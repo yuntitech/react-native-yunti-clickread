@@ -637,7 +637,8 @@ public class ClickReadFragment extends Fragment implements
             playTracks();
             RNYtClickreadModule.showToast(getContext(), R.string.start_read);
         } else {
-            stopPlayTracksIfNeeded();
+            mPlayerManager.stopTracks();
+            renderPlayTracks(R.drawable.selector_play_tracks_play);
             RNYtClickreadModule.showToast(getContext(), R.string.read_has_stopped);
         }
         MTAHelper.mtaTrackEvent(getContext(), MTAHelper.bl_011.setId(mClickReadDTO));
