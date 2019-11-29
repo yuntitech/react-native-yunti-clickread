@@ -1,13 +1,13 @@
 
-# react-native-yt-clickread
+# react-native-yunti-clickread
 
 ## Getting started
 
-`$ npm install react-native-yt-clickread --save`
+`$ npm install react-native-yunti-clickread --save`
 
 ### Mostly automatic installation
 
-`$ react-native link react-native-yt-clickread`
+`$ react-native link react-native-yunti-clickread`
 
 ### Manual installation
 
@@ -15,7 +15,7 @@
 #### iOS
 
 1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
-2. Go to `node_modules` ➜ `react-native-yt-clickread` and add `RNYtClickread.xcodeproj`
+2. Go to `node_modules` ➜ `react-native-yunti-clickread` and add `RNYtClickread.xcodeproj`
 3. In XCode, in the project navigator, select your project. Add `libRNYtClickread.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
 4. Run your project (`Cmd+R`)<
 
@@ -26,18 +26,18 @@
   - Add `new RNYtClickreadPackage()` to the list returned by the `getPackages()` method
 2. Append the following lines to `android/settings.gradle`:
   	```
-  	include ':react-native-yt-clickread'
-  	project(':react-native-yt-clickread').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-yt-clickread/android')
+  	include ':react-native-yunti-clickread'
+  	project(':react-native-yunti-clickread').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-yunti-clickread/android')
   	```
 3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
   	```
-      compile project(':react-native-yt-clickread')
+      compile project(':react-native-yunti-clickread')
   	```
 
 
 ## Usage
 ```javascript
-import RNYtClickread from 'react-native-yt-clickread';
+import RNYtClickread from 'react-native-yunti-clickread';
 
 // TODO: What to do with the module?
 RNYtClickread;

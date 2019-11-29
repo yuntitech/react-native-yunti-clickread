@@ -1,6 +1,6 @@
 {
-  "name": "react-native-yt-clickread",
-  "version": "1.0.0",
+  "name": "react-native-yunti-clickread",
+  "version": "1.0.1",
   "description": "Yunti internal module",
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,6 @@
   "license": "",
   "homepage": "https://github.com/yuntitech/react-native-yunti-clickread",
   "peerDependencies": {
-    "react-native": "^0.41.2"
+    "react-native": "^0.61.0"
   }
 }
