@@ -178,7 +178,7 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
 
     public static void startNavigationActivity(Activity activity) {
         try {
-            Class<?> clazz = Class.forName("com.reactnativenavigation.controllers.NavigationActivity");
+            Class<?> clazz = Class.forName("com.reactnativenavigation.NavigationActivity");
             Intent intent = new Intent(activity, clazz);
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             activity.startActivity(intent);
