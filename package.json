@@ -1,6 +1,6 @@
 {
   "name": "react-native-yunti-clickread",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Yunti internal module",
   "main": "index.js",
   "scripts": {
