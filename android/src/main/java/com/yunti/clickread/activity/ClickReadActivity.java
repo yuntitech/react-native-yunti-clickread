@@ -128,7 +128,6 @@ public class ClickReadActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         RNYtClickreadModule.pop(getApplicationContext());
-        RNYtClickreadModule.startNavigationActivity(this);
         super.onBackPressed();
     }
 
