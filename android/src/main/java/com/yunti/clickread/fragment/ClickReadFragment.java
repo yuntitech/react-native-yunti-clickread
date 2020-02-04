@@ -107,6 +107,7 @@ public class ClickReadFragment extends Fragment implements
         }
         mAudioLoadingHandler.removeMessages(AUDIO_LOAD_MSG);
         storePageIndex();
+        resetPageViews();
         super.onDestroy();
     }
 
@@ -828,6 +829,15 @@ public class ClickReadFragment extends Fragment implements
 
     private ClickReadPageView getCurrentPageView() {
         return getPageView(mViewPager.getCurrentItem());
+    }
+
+    private void resetPageViews() {
+        for (int i = 0; i < mViewPager.getChildCount(); i++) {
+            ClickReadPageView pageView = (ClickReadPageView) mViewPager.getChildAt(i);
+            if (pageView != null) {
+                pageView.reset();
+            }
+        }
     }
 
     public interface ClickReadFragmentDelegate {
