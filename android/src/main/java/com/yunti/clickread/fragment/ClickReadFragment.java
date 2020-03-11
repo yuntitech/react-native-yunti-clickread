@@ -101,6 +101,12 @@ public class ClickReadFragment extends Fragment implements
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+        storePageIndex();
+    }
+
+    @Override
     public void onDestroy() {
         if (mPlayerManager != null) {
             mPlayerManager.release();
@@ -765,7 +771,7 @@ public class ClickReadFragment extends Fragment implements
 
 
     private void storePageIndex() {
-        if (mClickReadDTO != null) {
+        if (mClickReadDTO != null && getContext() != null) {
             RNYtClickreadModule.setStorageItem(getContext(), getPageIndexKey(),
                     String.valueOf(mViewPager.getCurrentItem()));
         }
