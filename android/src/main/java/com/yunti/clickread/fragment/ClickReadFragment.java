@@ -112,7 +112,6 @@ public class ClickReadFragment extends Fragment implements
             mPlayerManager.release();
         }
         mAudioLoadingHandler.removeMessages(AUDIO_LOAD_MSG);
-        storePageIndex();
         resetPageViews();
         super.onDestroy();
     }
