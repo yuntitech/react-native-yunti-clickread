@@ -154,7 +154,7 @@ public class FetchInfo {
             ;
         }
         signParam = signParam + apiCommonParameters.get("_appv") + "153158E" + action;
-        signParam = MD5Util.MD5(signParam);
+        signParam = MD5Util.MD5(signParam).toLowerCase();
         if (dataMap != null) {
             signParam = signParam + JSON.toJSONString(dataMap);
         }
