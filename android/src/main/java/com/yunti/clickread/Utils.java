@@ -6,6 +6,8 @@ import android.text.format.Formatter;
 
 import androidx.fragment.app.Fragment;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +16,9 @@ import java.util.Locale;
 import java.util.Map;
 
 public class Utils {
+
+    private static final int STRING_BUILDER_SIZE = 256;
+    private static final String EMPTY = "";
 
     public static <O> List<O> subList(List<O> all, int start, int end) {
         List<O> result = new ArrayList<>();
@@ -81,6 +86,15 @@ public class Utils {
             fileSize = fileSize.replace(entry.getKey(), entry.getValue());
         }
         return fileSize;
+    }
+
+
+    static String fromParameterMap(Map<String, Object> parameterMap) {
+        List<String> concatenatedList = new ArrayList<>();
+        for (Map.Entry<String, Object> entry : parameterMap.entrySet()) {
+            concatenatedList.add(entry.getKey() + "=" + entry.getValue());
+        }
+        return StringUtils.join(concatenatedList, "&");
     }
 
 }

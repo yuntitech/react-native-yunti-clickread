@@ -70,4 +70,6 @@ dependencies {
     api 'com.qq.mta:mta:3.3.1-release'
     //mid  jar包 必须添加
     api 'com.tencent.mid:mid:3.73-release'
+    implementation 'commons-codec:commons-codec:1.10'
+    implementation 'org.apache.commons:commons-lang3:3.9'
 }

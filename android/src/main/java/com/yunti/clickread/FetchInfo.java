@@ -1,7 +1,9 @@
 package com.yunti.clickread;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
 import com.cqtouch.entity.BaseType;
@@ -10,8 +12,18 @@ import com.yt.ytdeep.client.dto.ClickReadDTO;
 import com.yt.ytdeep.client.dto.ResPlayDTO;
 import com.yunti.util.MD5Util;
 
+import org.apache.commons.codec.binary.Base64;
+
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import okhttp3.FormBody;
 
@@ -24,6 +36,7 @@ public class FetchInfo {
     private static final String QUERY_BY_BOOK_ID = "/clickreadservice/querybybookid.do";
     private static final String IS_BUY = "/userorderservice/isbuy/v2.do";
     private static final String ADD_TO_MY_BOOKS = "/userbooksservice/addtomybooks.do";
+    private static String yuntiAppToken = "";
 
 
     static {
@@ -69,22 +82,27 @@ public class FetchInfo {
         private String mAction;
         private Class mClass;
         private String mFetchParams;
+        private String mLdv;
 
         FetchInfoParams(String action, Map<String, Object> fetchParams, Class clazz) {
             mAction = action;
             mClass = clazz;
-            mFormBodyBuilder = new FormBody.Builder();
-            for (Map.Entry<String, Object> parameter : apiCommonParameters.entrySet()) {
-                if (parameter.getKey() == null || parameter.getValue() == null) {
-                    continue;
-                }
-                String name = parameter.getKey().trim();
-                String value = parameter.getValue().toString().trim();
-                mFormBodyBuilder.add(name, value);
-            }
             mFetchParams = JSON.toJSONString(fetchParams);
+            mFormBodyBuilder = new FormBody.Builder();
+            fetchParams = new HashMap<>();
+            addCommonParameters(fetchParams);
             mFormBodyBuilder.add("_data", mFetchParams);
-            mFormBodyBuilder.add("_sign", sign(action, fetchParams));
+            fetchParams.put("_data", mFetchParams);
+            if (this.mLdv != null) {
+                fetchParams.put("_ldv", this.mLdv);
+            }
+            SignV2 signV2 = new SignV2(System.currentTimeMillis(), UUID.randomUUID().toString(),
+                    fetchParams);
+            if (signV2.getSign() != null) {
+                mFormBodyBuilder.add("_timestamp", signV2.getTimestamp());
+                mFormBodyBuilder.add("_nonce", signV2.getNonce());
+                mFormBodyBuilder.add("_sign", signV2.getSign());
+            }
         }
 
         public String getUrl() {
@@ -105,12 +123,25 @@ public class FetchInfo {
 
         public void addLdv(String ldv) {
             if (ldv != null) {
+                this.mLdv = ldv;
                 mFormBodyBuilder.add("_ldv", ldv);
             }
         }
 
         public String getFetchParams() {
             return mFetchParams;
+        }
+
+        private void addCommonParameters(Map<String, Object> fetchParams) {
+            for (Map.Entry<String, Object> parameter : apiCommonParameters.entrySet()) {
+                if (parameter.getKey() == null || parameter.getValue() == null) {
+                    continue;
+                }
+                String name = parameter.getKey().trim();
+                String value = parameter.getValue().toString().trim();
+                mFormBodyBuilder.add(name, value);
+                fetchParams.put(name, value);
+            }
         }
     }
 
@@ -136,6 +167,7 @@ public class FetchInfo {
             apiCommonParameters.put("_userId", getLongValue(apiCommonBundle, "_userId"));
             apiCommonParameters.put("_tid", apiCommonBundle.getString("_tid"));
         }
+        yuntiAppToken = bundle.getString("yuntiAppToken");
     }
 
     public static boolean isGuest() {
@@ -168,5 +200,51 @@ public class FetchInfo {
         return value.longValue();
     }
 
+    private static final String ALGORITHM = "HmacSHA1";
+    private static final String ENCODING = "UTF-8";
+
+    private static String signV2(Map<String, Object> parameterMap) {
+        if (yuntiAppToken == null) {
+            return null;
+        }
+        parameterMap = new TreeMap<>(parameterMap);
+        String concatenatedString = Utils.fromParameterMap(parameterMap);
+        String encodedStringToSign = Uri.encode(concatenatedString);
+        try {
+            Mac mac = Mac.getInstance(ALGORITHM);
+            mac.init(new SecretKeySpec(yuntiAppToken.getBytes(ENCODING), ALGORITHM));
+            byte[] signData = mac.doFinal(encodedStringToSign.getBytes(ENCODING));
+            return new String(Base64.encodeBase64(signData));
+        } catch (NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e) {
+            Log.d("calculateSignV2 error", e.getMessage());
+            return null;
+        }
+    }
+
+    static class SignV2 {
+        private String timestamp;
+        private String nonce;
+        private String sign;
+
+        SignV2(long timestamp, String nonce, Map<String, Object> fetchParams) {
+            this.timestamp = String.valueOf(timestamp);
+            this.nonce = nonce;
+            fetchParams.put("_timestamp", this.timestamp);
+            fetchParams.put("_nonce", this.nonce);
+            this.sign = signV2(fetchParams);
+        }
+
+        String getTimestamp() {
+            return timestamp;
+        }
+
+        String getNonce() {
+            return nonce;
+        }
+
+        String getSign() {
+            return sign;
+        }
+    }
 
 }
