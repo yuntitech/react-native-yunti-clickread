@@ -94,7 +94,6 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         if (activity != null) {
             Intent intent = new Intent(activity, ClickReadActivity.class);
             Bundle bundle = Arguments.toBundle(params);
-            Log.d("##", "openClickReadActivity " + params.toHashMap().toString());
             if (bundle != null) {
                 intent.putExtras(bundle);
             }
