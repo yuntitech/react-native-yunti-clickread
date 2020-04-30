@@ -15,6 +15,7 @@ import com.yunti.util.MD5Util;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -209,18 +210,22 @@ public class FetchInfo {
         }
         parameterMap = new TreeMap<>(parameterMap);
         String concatenatedString = Utils.fromParameterMap(parameterMap);
-        String encodedStringToSign = Uri.encode(concatenatedString);
         try {
+            String encodedStringToSign = URLEncoder.encode(concatenatedString, ENCODING)
+                    .replace("+", "%20")
+                    .replace("*", "%2A")
+                    .replace("%7E", "~");
             Mac mac = Mac.getInstance(ALGORITHM);
             mac.init(new SecretKeySpec(yuntiAppToken.getBytes(ENCODING), ALGORITHM));
             byte[] signData = mac.doFinal(encodedStringToSign.getBytes(ENCODING));
             return new String(Base64.encodeBase64(signData));
-        } catch (NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e) {
+        } catch (Exception e) {
             Log.d("calculateSignV2 error", e.getMessage());
             return null;
         }
     }
 
+    // https://www.tapd.cn/21394591/markdown_wikis/view/#1121394591001006929
     static class SignV2 {
         private String timestamp;
         private String nonce;
