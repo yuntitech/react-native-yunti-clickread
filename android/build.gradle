@@ -37,7 +37,7 @@ repositories {
     google()
     mavenCentral()
     maven {
-        url "http://115.29.40.14:8010/nexus/content/groups/public"
+        url "http://mvn.yeteam.com:8010/nexus/content/groups/public"
     }
     maven { url "https://jitpack.io" }
 }
