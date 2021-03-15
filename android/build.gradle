@@ -67,7 +67,8 @@ dependencies {
     implementation 'com.afollestad.material-dialogs:core:0.9.4.5'
     implementation project(':@react-native-community_async-storage')
     //mta  稳定版
-    api 'com.qq.mta:mta:3.6.0-release'
+    api 'com.ZhugeioAnalytic:zhugeio:latest.integration'
+//    api 'com.qq.mta:mta:3.6.0-release'
     //mid  jar包 必须添加 注：MTA的mid版本号必须和信鸽的mid版本一致
     api 'com.tencent.mid:mid:4.0.7-Release'
     implementation 'commons-codec:commons-codec:1.10'
