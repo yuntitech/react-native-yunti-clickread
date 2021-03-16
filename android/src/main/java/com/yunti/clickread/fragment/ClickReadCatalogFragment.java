@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment;
 
 import com.alibaba.fastjson.JSON;
 import com.badoo.mobile.util.WeakHandler;
+import com.tencent.stat.StatService;
 import com.yt.ytdeep.client.dto.ClickReadCatalogDTO;
 import com.yt.ytdeep.client.dto.ClickReadDTO;
 import com.yt.ytdeep.client.dto.ClickReadPage;

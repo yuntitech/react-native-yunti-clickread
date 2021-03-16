@@ -2,11 +2,10 @@ package com.yunti.clickread;
 
 import android.content.Context;
 
+import com.tencent.stat.StatService;
 import com.yt.ytdeep.client.dto.ClickReadDTO;
-import com.zhuge.analysis.stat.ZhugeSDK;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.Properties;
 
 /*
  * @Author: kangqiang
@@ -26,11 +25,7 @@ public class MTAHelper {
         if (context == null) {
             return;
         }
-        try {
-            ZhugeSDK.getInstance().track(context, mtaObject.name, mtaObject.toProperties());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        StatService.trackCustomKVEvent(context, mtaObject.name, mtaObject.toProperties());
     }
 
 
@@ -51,13 +46,13 @@ public class MTAHelper {
             this.description = description;
         }
 
-        private JSONObject toProperties() throws JSONException {
-            JSONObject eventObject = new JSONObject();
+        private Properties toProperties() {
+            Properties properties = new Properties();
             if (id != null) {
-                eventObject.put("id ", id);
+                properties.put("id ", id);
             }
-            eventObject.put("eventDescription", description);
-            return eventObject;
+            properties.put("eventDescription", description);
+            return properties;
         }
 
     }
