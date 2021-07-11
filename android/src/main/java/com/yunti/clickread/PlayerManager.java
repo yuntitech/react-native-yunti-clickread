@@ -37,7 +37,6 @@ import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.source.ads.AdsMediaSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
@@ -54,7 +53,7 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
-public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, Player.EventListener {
+public final class PlayerManager implements Player.EventListener {
 
     private Fragment mFragment;
     private Context mContext;
@@ -63,7 +62,7 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
     private final OkHttpClient mClient;
     //
     private static final int SHOW_PROGRESS = 1;
-    private static final long mProgressUpdateInterval = 250;
+    private static final long mProgressUpdateInterval = 30;
     //
     private boolean mPlayTracks = false;
     private Long mClickReadId = 0L;
@@ -192,18 +191,7 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
         mProgressHandler.removeMessages(SHOW_PROGRESS);
     }
 
-    // AdsMediaSource.MediaSourceFactory implementation.
-
-    @Override
-    public MediaSource createMediaSource(Uri uri) {
-        return buildMediaSource(uri);
-    }
-
-    @Override
-    public int[] getSupportedTypes() {
-        // IMA does not support Smooth Streaming ads.
-        return new int[]{C.TYPE_HLS, C.TYPE_OTHER};
-    }
+    // AdsMediaSource.MediaSourceFactory implementation.=
 
     private void play(ClickReadTrackinfo trackInfo, String uri) {
         MediaSource contentMediaSource = buildMediaSource(Uri.parse(uri));
@@ -226,10 +214,12 @@ public final class PlayerManager implements AdsMediaSource.MediaSourceFactory, P
     }
 
     private boolean onProgress(long currentPosition) {
-        if (mPlayTrackInfo != null
-                && mPlayTrackInfo.getPe() != null
-                && currentPosition > mPlayTrackInfo.getPe()) {
-            onTrackEnd();
+        if (mPlayTrackInfo != null && mPlayTrackInfo.getPe() != null) {
+            long remainingEndTime = mPlayTrackInfo.getPe() - currentPosition;
+            // 剩余结束时间<=半个轮询周期时音频停止
+            if (remainingEndTime <= mProgressUpdateInterval / 2) {
+                onTrackEnd();
+            }
             return false;
         }
         return true;
