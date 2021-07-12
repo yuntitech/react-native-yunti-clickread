@@ -101,7 +101,7 @@ public class YTApi {
     public static <T> void fetch(FetchInfo.FetchInfoParams params, Callback<T> callback,
                                  Fragment fragment) {
         Request request = new Request.Builder()
-                .post(params.getFormBody())
+                .post(params.getSignedFormBody())
                 .url(params.getUrl())
                 .build();
         //当前为主线程

@@ -1,6 +1,5 @@
 package com.yunti.clickread;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -14,10 +13,7 @@ import com.yunti.util.MD5Util;
 
 import org.apache.commons.codec.binary.Base64;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -79,11 +75,11 @@ public class FetchInfo {
 
 
     public static class FetchInfoParams {
-        private FormBody.Builder mFormBodyBuilder;
-        private String mAction;
-        private Class mClass;
-        private String mFetchParams;
-        private String mLdv;
+        private final FormBody.Builder mFormBodyBuilder;
+        private final String mAction;
+        private final Class mClass;
+        private final String mFetchParams;
+        private final Map<String, Object> mFetchParamMap;
 
         FetchInfoParams(String action, Map<String, Object> fetchParams, Class clazz) {
             mAction = action;
@@ -94,16 +90,7 @@ public class FetchInfo {
             addCommonParameters(fetchParams);
             mFormBodyBuilder.add("_data", mFetchParams);
             fetchParams.put("_data", mFetchParams);
-            if (this.mLdv != null) {
-                fetchParams.put("_ldv", this.mLdv);
-            }
-            SignV2 signV2 = new SignV2(System.currentTimeMillis(), UUID.randomUUID().toString(),
-                    fetchParams);
-            if (signV2.getSign() != null) {
-                mFormBodyBuilder.add("_timestamp", signV2.getTimestamp());
-                mFormBodyBuilder.add("_nonce", signV2.getNonce());
-                mFormBodyBuilder.add("_sign", signV2.getSign());
-            }
+            mFetchParamMap = fetchParams;
         }
 
         public String getUrl() {
@@ -114,7 +101,14 @@ public class FetchInfo {
             return mAction;
         }
 
-        public FormBody getFormBody() {
+        public FormBody getSignedFormBody() {
+            SignV2 signV2 = new SignV2(System.currentTimeMillis(), UUID.randomUUID().toString(),
+                    mFetchParamMap);
+            if (signV2.getSign() != null) {
+                mFormBodyBuilder.add("_timestamp", signV2.getTimestamp());
+                mFormBodyBuilder.add("_nonce", signV2.getNonce());
+                mFormBodyBuilder.add("_sign", signV2.getSign());
+            }
             return mFormBodyBuilder.build();
         }
 
@@ -124,7 +118,7 @@ public class FetchInfo {
 
         public void addLdv(String ldv) {
             if (ldv != null) {
-                this.mLdv = ldv;
+                mFetchParamMap.put("_ldv", ldv);
                 mFormBodyBuilder.add("_ldv", ldv);
             }
         }
@@ -232,7 +226,7 @@ public class FetchInfo {
         private String sign;
 
         SignV2(long timestamp, String nonce, Map<String, Object> fetchParams) {
-            this.timestamp = String.valueOf(timestamp);
+            this.timestamp = String.valueOf(timestamp / 1000);
             this.nonce = nonce;
             fetchParams.put("_timestamp", this.timestamp);
             fetchParams.put("_nonce", this.nonce);
