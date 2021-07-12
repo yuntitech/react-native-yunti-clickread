@@ -323,8 +323,15 @@ public class ClickReadFragment extends Fragment implements
     }
 
     private Long getBookId() {
-        Double bookId = getArguments() != null ? getArguments().getDouble("bookId") : null;
-        return bookId != null ? bookId.longValue() : 0;
+        Object bookId = getArguments() != null ? getArguments().get("bookId") : null;
+        if (bookId != null) {
+            if (bookId instanceof Double) {
+                return ((Double) bookId).longValue();
+            } else if (bookId instanceof String) {
+                return Long.parseLong(bookId.toString());
+            }
+        }
+        return 0L;
     }
 
     private List<ClickReadPage> getClickReadPages(ClickReadDTO clickReadDTO) {
