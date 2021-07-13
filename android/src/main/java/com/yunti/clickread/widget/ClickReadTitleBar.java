@@ -18,6 +18,7 @@ public class ClickReadTitleBar extends YTLinearLayout {
 
     private Button mClickArea;
     private Button mBuy;
+    private Button mSpokenTest;
 
     public ClickReadTitleBar(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -37,6 +38,7 @@ public class ClickReadTitleBar extends YTLinearLayout {
         View.inflate(context, R.layout.view_click_read_title, this);
         mClickArea = findViewById(R.id.btn_click_area);
         mBuy = findViewById(R.id.btn_buy);
+        mSpokenTest = findViewById(R.id.btn_spoken_test);
         mClickArea.setEnabled(false);
         setVisibility(View.INVISIBLE);
     }
@@ -47,6 +49,7 @@ public class ClickReadTitleBar extends YTLinearLayout {
         findViewById(R.id.btn_catalog).setOnClickListener(l);
         mBuy.setOnClickListener(l);
         mClickArea.setOnClickListener(l);
+        mSpokenTest.setOnClickListener(l);
         findViewById(R.id.img_back).setOnClickListener(l);
     }
 
@@ -71,4 +74,7 @@ public class ClickReadTitleBar extends YTLinearLayout {
         mBuy.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
+    public void setSpokenTestVisible(Boolean visible) {
+        mSpokenTest.setVisibility(Boolean.TRUE.equals(visible) ? View.VISIBLE : View.GONE);
+    }
 }

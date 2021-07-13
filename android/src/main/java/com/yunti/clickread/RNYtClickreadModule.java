@@ -162,8 +162,18 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
             return;
         }
         Long clickReadId = clickReadDTO.getId();
+        // BUY_CLICK_READ: 8, // 购买点读
         RNYtClickreadModule.push(activity,
                 "cn.bookln.ConfirmOrderHomeScreen", clickReadId, 8);
+    }
+
+    public static void pushSpeechEvaluationSentenceListScreen(Long bookId, Activity activity) {
+        if (activity == null) {
+            return;
+        }
+        // BUY_ORDER_SPOKEN: 29, // 购买口语测评
+        RNYtClickreadModule.push(activity,
+                "cn.bookln.SpeechEvaluationSentenceListScreen", bookId, 29);
     }
 
     public static void pushLoginScreen(Activity activity) {
@@ -309,6 +319,21 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         alert(fragment,
                 (dialog, which) -> RNYtClickreadModule.pushLoginScreen(fragment.getActivity()),
                 "您需要登录后使用该功能", "登录", null);
+    }
+
+    public static void buyAlert(Fragment fragment, ClickReadDTO clickReadDTO) {
+        Activity activity = fragment.getActivity();
+        RNYtClickreadModule.alert(fragment, (dialog, which) -> {
+                    if (FetchInfo.isGuest()) {
+                        RNYtClickreadModule.guestAlert(fragment);
+                    } else {
+                        RNYtClickreadModule.pushOrderHomeScreen(clickReadDTO, activity);
+                        MTAHelper.mtaTrackEvent(activity, MTAHelper.bl_009.setId(clickReadDTO));
+                    }
+                }, "购买后即可下载", "购买", (dialog, which)
+                        -> MTAHelper.mtaTrackEvent(activity, MTAHelper.bl_010.setId(clickReadDTO))
+        );
+        MTAHelper.mtaTrackEvent(activity, MTAHelper.bl_008.setId(clickReadDTO));
     }
 
     public static void alert(Fragment fragment,

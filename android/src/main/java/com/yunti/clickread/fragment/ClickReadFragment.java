@@ -214,6 +214,7 @@ public class ClickReadFragment extends Fragment implements
                             mRestoreCompleted[1] = false;
                         }
                         ClickReadFragment.this.runOnUiThread(() -> {
+                            mTitleBar.setSpokenTestVisible(response != null && response.getSpoken());
                             if (mDelegate != null) {
                                 mDelegate.onResponse(response);
                             }
@@ -541,6 +542,14 @@ public class ClickReadFragment extends Fragment implements
             onPressPlayTracks();
         } else if (viewId == R.id.view_load_tips) {
             fetchData();
+        } else if (viewId == R.id.btn_spoken_test) {
+            if (FetchInfo.isGuest()) {
+                RNYtClickreadModule.guestAlert(this);
+            } else if (isBought) {
+                RNYtClickreadModule.pushSpeechEvaluationSentenceListScreen(getBookId(), getActivity());
+            } else {
+                RNYtClickreadModule.buyAlert(this, mClickReadDTO);
+            }
         }
     }
 

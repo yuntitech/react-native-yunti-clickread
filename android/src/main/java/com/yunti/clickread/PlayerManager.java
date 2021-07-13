@@ -49,9 +49,7 @@ import com.yunti.util.ResourceUtils;
 
 import java.util.List;
 
-import okhttp3.Callback;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 
 public final class PlayerManager implements Player.EventListener {
 
@@ -219,8 +217,8 @@ public final class PlayerManager implements Player.EventListener {
             // 剩余结束时间<=半个轮询周期时音频停止
             if (remainingEndTime <= mProgressUpdateInterval / 2) {
                 onTrackEnd();
+                return false;
             }
-            return false;
         }
         return true;
     }
