@@ -214,7 +214,7 @@ public class ClickReadFragment extends Fragment implements
                             mRestoreCompleted[1] = false;
                         }
                         ClickReadFragment.this.runOnUiThread(() -> {
-                            mTitleBar.setSpokenTestVisible(response != null && response.getSpoken());
+                            mTitleBar.setSpokenTestVisible(response.getSpoken());
                             if (mDelegate != null) {
                                 mDelegate.onResponse(response);
                             }
