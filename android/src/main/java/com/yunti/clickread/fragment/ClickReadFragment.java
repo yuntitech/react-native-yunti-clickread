@@ -39,6 +39,7 @@ import com.yunti.clickread.widget.YTLoadTipsView;
 import com.yunti.view.SnappingRecyclerView;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +81,7 @@ public class ClickReadFragment extends Fragment implements
         }
         return false;
     });
+    private Long sectionIdFromDefaultChapterId;
 
     public int getRestorePageIndex() {
         return mRestorePageIndex;
@@ -208,8 +210,12 @@ public class ClickReadFragment extends Fragment implements
 
                     @Override
                     public void resolve(String result) {
+                        Integer initPageIndex = getInitPageIndex();
+                        if (initPageIndex != null) {
+                            result = String.valueOf(initPageIndex);
+                        }
                         if (!TextUtils.isEmpty(result)) {
-                            mRestorePageIndex = Integer.valueOf(result);
+                            mRestorePageIndex = Integer.parseInt(result);
                             mRestoreCompleted[0] = false;
                             mRestoreCompleted[1] = false;
                         }
@@ -335,9 +341,20 @@ public class ClickReadFragment extends Fragment implements
         return 0L;
     }
 
+    private Long getDefaultChapterId() {
+        Double defaultChapterId = getArguments() != null ? getArguments().getDouble("defaultChapterId") : null;
+        return defaultChapterId != null ? defaultChapterId.longValue() : null;
+    }
+
+    private Long getDefaultSectionId() {
+        Double defaultSectionId = getArguments() != null ? getArguments().getDouble("defaultSectionId") : null;
+        return defaultSectionId != null ? defaultSectionId.longValue() : null;
+    }
+
     private List<ClickReadPage> getClickReadPages(ClickReadDTO clickReadDTO) {
         List<ClickReadPage> clickReadPages = null;
         if (clickReadDTO != null && clickReadDTO.getChapters() != null) {
+            Long defaultChapterId = getDefaultChapterId();
             clickReadPages = new ArrayList<>();
             for (ClickReadCatalogDTO chapter : clickReadDTO.getChapters()) {
                 //试读结束位置
@@ -347,7 +364,10 @@ public class ClickReadFragment extends Fragment implements
                 ) {
                     mFreeEndPageIndex = clickReadPages.size();
                 }
-                if (chapter.getSections() != null) {
+                if (chapter.getSections() != null && chapter.getSections().size() > 0) {
+                    if (chapter.getId().equals(defaultChapterId)) {
+                        this.sectionIdFromDefaultChapterId = chapter.getSections().get(0).getId();
+                    }
                     for (ClickReadCatalogDTO section : chapter.getSections()) {
                         if (section.getPages() != null) {
                             clickReadPages.addAll(section.getPages());
@@ -546,7 +566,8 @@ public class ClickReadFragment extends Fragment implements
             if (FetchInfo.isGuest()) {
                 RNYtClickreadModule.guestAlert(this);
             } else if (isBought) {
-                RNYtClickreadModule.pushSpeechEvaluationSentenceListScreen(getBookId(), getActivity());
+                RNYtClickreadModule.pushSpeechEvaluationSentenceListScreen(getBookId(),
+                        getCurrentPage(), getActivity());
             } else {
                 RNYtClickreadModule.buyAlert(this, mClickReadDTO);
             }
@@ -859,6 +880,23 @@ public class ClickReadFragment extends Fragment implements
                 pageView.reset();
             }
         }
+    }
+
+    private Integer getInitPageIndex() {
+        Long defaultSectionId = getDefaultSectionId();
+        if (defaultSectionId == null) {
+            defaultSectionId = this.sectionIdFromDefaultChapterId;
+        }
+        if (defaultSectionId != null) {
+            Long finalDefaultSectionId = defaultSectionId;
+            ClickReadPage currentPage = CollectionUtils.find(mClickReadPages, clickReadPage
+                    -> clickReadPage.getSectionId() != null
+                    && clickReadPage.getSectionId().equals(finalDefaultSectionId));
+            if (currentPage != null) {
+                return mClickReadPages.indexOf(currentPage);
+            }
+        }
+        return null;
     }
 
     public interface ClickReadFragmentDelegate {

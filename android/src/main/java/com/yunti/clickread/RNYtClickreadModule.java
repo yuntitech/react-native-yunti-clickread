@@ -29,6 +29,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.reactnativecommunity.asyncstorage.AsyncStorageModule;
 import com.yt.ytdeep.client.dto.ClickReadDTO;
+import com.yt.ytdeep.client.dto.ClickReadPage;
 import com.yt.ytdeep.client.dto.ClickReadTrackinfo;
 import com.yunti.clickread.activity.ClickReadActivity;
 import com.yunti.clickread.dialog.BottomOptionDialog;
@@ -167,13 +168,16 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
                 "cn.bookln.ConfirmOrderHomeScreen", clickReadId, 8);
     }
 
-    public static void pushSpeechEvaluationSentenceListScreen(Long bookId, Activity activity) {
+    public static void pushSpeechEvaluationSentenceListScreen(Long bookId,
+                                                              ClickReadPage clickReadPage,
+                                                              Activity activity) {
         if (activity == null) {
             return;
         }
+        Long defaultSectionId = clickReadPage != null ? clickReadPage.getSectionId() : null;
         // BUY_ORDER_SPOKEN: 29, // 购买口语测评
         RNYtClickreadModule.push(activity,
-                "cn.bookln.SpeechEvaluationSentenceListScreen", bookId, 29);
+                "cn.bookln.SpeechEvaluationSentenceListScreen", bookId, 29, defaultSectionId);
     }
 
     public static void pushLoginScreen(Activity activity) {
@@ -199,10 +203,17 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
     }
 
     public static void push(Activity activity, String screen, Long bizId, int bizType) {
+        push(activity, screen, bizId, bizType, null);
+    }
+
+    public static void push(Activity activity, String screen, Long bizId, int bizType, Long defaultSectionId) {
         Bundle params = new Bundle();
         params.putString("screen", screen);
         params.putLong("bizId", bizId);
         params.putInt("bizType", bizType);
+        if (defaultSectionId != null) {
+            params.putLong("defaultSectionId", defaultSectionId);
+        }
         push(activity, params);
     }
 
