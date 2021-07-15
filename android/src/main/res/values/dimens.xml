@@ -17,4 +17,5 @@
     <dimen name="size_24">24sp</dimen>
     <dimen name="size_30">30sp</dimen>
     <integer name="acti_anim_duration">300</integer>
+    <dimen name="click_read_top_item">64dp</dimen>
 </resources>
