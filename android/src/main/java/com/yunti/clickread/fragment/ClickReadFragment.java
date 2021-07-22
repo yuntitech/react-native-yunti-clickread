@@ -342,7 +342,7 @@ public class ClickReadFragment extends Fragment implements
 
     private Long getDefaultChapterId() {
         Double defaultChapterId = getArguments() != null ? getArguments().getDouble("defaultChapterId") : null;
-        return defaultChapterId != null ? defaultChapterId.longValue() : null;
+        return defaultChapterId != null ? defaultChapterId.longValue() : 0L;
     }
 
     private Long getDefaultSectionId() {
@@ -364,7 +364,7 @@ public class ClickReadFragment extends Fragment implements
                     mFreeEndPageIndex = clickReadPages.size();
                 }
                 if (chapter.getSections() != null && chapter.getSections().size() > 0) {
-                    if (chapter.getId().equals(defaultChapterId)) {
+                    if (defaultChapterId.equals(chapter.getId())) {
                         this.sectionIdFromDefaultChapterId = chapter.getSections().get(0).getId();
                     }
                     for (ClickReadCatalogDTO section : chapter.getSections()) {
