@@ -23,7 +23,6 @@ import com.yt.ytdeep.client.dto.ClickReadPage;
 import com.yt.ytdeep.client.dto.ClickReadTrackinfo;
 import com.yt.ytdeep.client.dto.UserOrderDTO;
 import com.yunti.clickread.FetchInfo;
-import com.yunti.clickread.MTAHelper;
 import com.yunti.clickread.PlayerManager;
 import com.yunti.clickread.R;
 import com.yunti.clickread.RNYtClickreadModule;
@@ -684,7 +683,6 @@ public class ClickReadFragment extends Fragment implements
             renderPlayTracks(R.drawable.selector_play_tracks_play);
             RNYtClickreadModule.showToast(getContext(), R.string.read_has_stopped);
         }
-        MTAHelper.mtaTrackEvent(getContext(), MTAHelper.bl_011.setId(mClickReadDTO));
     }
 
     private void playTracks() {

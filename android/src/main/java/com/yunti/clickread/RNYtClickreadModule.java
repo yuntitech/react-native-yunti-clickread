@@ -339,12 +339,8 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
                         RNYtClickreadModule.guestAlert(fragment);
                     } else {
                         RNYtClickreadModule.pushOrderHomeScreen(clickReadDTO, activity);
-                        MTAHelper.mtaTrackEvent(activity, MTAHelper.bl_009.setId(clickReadDTO));
                     }
-                }, "购买后即可下载", "购买", (dialog, which)
-                        -> MTAHelper.mtaTrackEvent(activity, MTAHelper.bl_010.setId(clickReadDTO))
-        );
-        MTAHelper.mtaTrackEvent(activity, MTAHelper.bl_008.setId(clickReadDTO));
+                }, "购买后即可下载", "购买", null);
     }
 
     public static void alert(Fragment fragment,
