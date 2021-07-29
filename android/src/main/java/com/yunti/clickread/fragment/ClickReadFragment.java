@@ -40,9 +40,10 @@ import com.yunti.view.SnappingRecyclerView;
 
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
 
 public class ClickReadFragment extends Fragment implements
         ClickReadPageView.ClickReadPageViewDelegate, PlayerManager.EventListener,
@@ -273,6 +274,11 @@ public class ClickReadFragment extends Fragment implements
             @Override
             public void onResponse(int code, BuyResultDTO response) {
                 if (callback != null) {
+                    HashMap<String, Object> params = new HashMap();
+                    params.put("name", mClickReadDTO.getBookName());
+                    params.put("id", mClickReadDTO.getBookId());
+                    params.put("isBuy", response.isBuySuccess() ? "是" : "否");
+                    MTAHelper.mtaTrackEvent(getContext(), MTAHelper.xdfsjj_070, params);
                     callback.onResponse(code, response);
                     return;
                 }
@@ -455,6 +461,7 @@ public class ClickReadFragment extends Fragment implements
     public void onPageSelected(int position) {
         renderPage();
         if (!isBought && position == mPagerAdapter.getCount() - 1) {
+            MTAHelper.mtaTrackEvent(getContext(), MTAHelper.xdfsjj_071, buildTrackParams());
             renderButtonEnable(false);
             playOrPauseTracksIfPageChanged(true);
             setButtonsVisible(false);
@@ -524,6 +531,7 @@ public class ClickReadFragment extends Fragment implements
             if (FetchInfo.isGuest()) {
                 RNYtClickreadModule.guestAlert(this);
             } else {
+                MTAHelper.mtaTrackEvent(getContext(), viewId == R.id.btn_buy?MTAHelper.xdfsjj_073:MTAHelper.xdfsjj_072, buildTrackParams());
                 RNYtClickreadModule.pushOrderHomeScreen(mClickReadDTO, getActivity());
             }
         } else if (viewId == R.id.img_back) {
@@ -537,6 +545,18 @@ public class ClickReadFragment extends Fragment implements
         }
     }
 
+    /**
+     * 构建上报参数
+     * @return
+     */
+    private HashMap<String,Object> buildTrackParams(){
+        HashMap<String, Object> params = new HashMap();
+        params.put("name", mClickReadDTO.getBookName());
+        params.put("id", mClickReadDTO.getBookId());
+        double price = new BigDecimal(Float.parseFloat(mClickReadDTO.getAuthVal()) / 100).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        params.put("price", price);
+        return params ;
+    }
 
     public void buySuccess() {
         isBought = true;
