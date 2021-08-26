@@ -2,7 +2,6 @@ package com.yunti.clickread;
 
 import android.content.Context;
 
-import com.tencent.stat.StatService;
 import com.yt.ytdeep.client.dto.ClickReadDTO;
 
 import java.util.Properties;
@@ -25,7 +24,8 @@ public class MTAHelper {
         if (context == null) {
             return;
         }
-        StatService.trackCustomKVEvent(context, mtaObject.name, mtaObject.toProperties());
+        //TODO: 埋点上传
+        // StatService.trackCustomKVEvent(context, mtaObject.name, mtaObject.toProperties());
     }
 
 
