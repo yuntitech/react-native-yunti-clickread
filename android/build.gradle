@@ -65,7 +65,7 @@ dependencies {
         exclude group: 'com.alibaba', module: 'fastjson'
     }
     implementation 'com.afollestad.material-dialogs:core:0.9.4.5'
-    implementation project(':@react-native-community_async-storage')
+    implementation project(':@react-native-async-storage_async-storage')
     implementation 'commons-codec:commons-codec:1.10'
     implementation 'org.apache.commons:commons-lang3:3.9'
 }
