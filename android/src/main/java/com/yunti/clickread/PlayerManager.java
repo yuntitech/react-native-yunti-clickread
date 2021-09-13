@@ -49,9 +49,7 @@ import com.yunti.util.ResourceUtils;
 
 import java.util.List;
 
-import okhttp3.Callback;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 
 public final class PlayerManager implements Player.EventListener {
 
@@ -62,7 +60,7 @@ public final class PlayerManager implements Player.EventListener {
     private final OkHttpClient mClient;
     //
     private static final int SHOW_PROGRESS = 1;
-    private static final long mProgressUpdateInterval = 30;
+    private static final long mProgressUpdateInterval = 250;
     //
     private boolean mPlayTracks = false;
     private Long mClickReadId = 0L;
@@ -191,7 +189,7 @@ public final class PlayerManager implements Player.EventListener {
         mProgressHandler.removeMessages(SHOW_PROGRESS);
     }
 
-    // AdsMediaSource.MediaSourceFactory implementation.=
+    // AdsMediaSource.MediaSourceFactory implementation.
 
     private void play(ClickReadTrackinfo trackInfo, String uri) {
         MediaSource contentMediaSource = buildMediaSource(Uri.parse(uri));
@@ -214,12 +212,10 @@ public final class PlayerManager implements Player.EventListener {
     }
 
     private boolean onProgress(long currentPosition) {
-        if (mPlayTrackInfo != null && mPlayTrackInfo.getPe() != null) {
-            long remainingEndTime = mPlayTrackInfo.getPe() - currentPosition;
-            // 剩余结束时间<=半个轮询周期时音频停止
-            if (remainingEndTime <= mProgressUpdateInterval / 2) {
-                onTrackEnd();
-            }
+        if (mPlayTrackInfo != null
+                && mPlayTrackInfo.getPe() != null
+                && currentPosition > mPlayTrackInfo.getPe()) {
+            onTrackEnd();
             return false;
         }
         return true;
