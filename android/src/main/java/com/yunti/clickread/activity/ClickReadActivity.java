@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -202,8 +203,11 @@ public class ClickReadActivity extends AppCompatActivity
     }
 
     private Bundle getExtras(Bundle savedInstanceState) {
-        return savedInstanceState != null ?
+        Bundle bundle = savedInstanceState != null ?
                 savedInstanceState : getIntent().getExtras();
+        boolean isLandscape = bundle.getBoolean("isLandscape", false);
+        setRequestedOrientation(isLandscape ? ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        return bundle;
     }
 
     class MyRunnable implements Runnable {
