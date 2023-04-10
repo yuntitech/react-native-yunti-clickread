@@ -346,7 +346,8 @@ public class ClickReadFragment extends Fragment implements
     }
 
     private Long getDefaultSectionId() {
-        Double defaultSectionId = getArguments() != null ? getArguments().getDouble("defaultSectionId") : null;
+        Bundle bundle = getArguments();
+        Double defaultSectionId = bundle != null && bundle.containsKey("defaultSectionId") ? bundle.getDouble("defaultSectionId") : null;
         return defaultSectionId != null ? defaultSectionId.longValue() : null;
     }
 
