@@ -11,13 +11,17 @@ buildscript {
 
 apply plugin: 'com.android.library'
 
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
+
 android {
-    compileSdkVersion 28
-    buildToolsVersion "28.0.1"
+    compileSdkVersion safeExtGet('compileSdkVersion', 28)
+    buildToolsVersion safeExtGet('buildToolsVersion', "28.0.1")
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 28
+        targetSdkVersion safeExtGet('targetSdkVersion', 28)
         versionCode 1
         versionName "1.0"
     }
@@ -42,7 +46,8 @@ dependencies {
     implementation 'com.facebook.react:react-native:+'
     implementation 'com.yeteam.bookln:ytdeep-dtosdk:1.9.22'
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
-    implementation 'com.github.bumptech.glide:glide:4.9.0'
+    // implementation 'com.github.bumptech.glide:glide:4.9.0'
+    implementation project(':glide')
     implementation 'com.nineoldandroids:library:2.4.0'
     implementation 'io.reactivex:rxandroid:1.2.1'
     implementation 'io.reactivex:rxjava:1.1.6'
