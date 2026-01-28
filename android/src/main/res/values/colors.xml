@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="color_3ca6fe">#3ca6fe</color>
-    <color name="video_blue">#3ca6fe</color>
-    <color name="video_blue_alpha">#663ca6fe</color>
-    <color name="color_8fd1e5">#8fd1e5</color>
+    <color name="color_3ca6fe">#5FD5A4</color>
+    <color name="video_blue">#5FD5A4</color>
+    <color name="video_blue_alpha">#665FD5A4</color>
+    <color name="color_8fd1e5">#5FD5A4</color>
     <color name="default_shadow_color">#88757575</color>
     <color name="default_fill_color">#ffffff</color>
     <color name="shadow">#AA000000</color>
@@ -21,10 +21,10 @@
     <color name="title_bar_bg">#FFFFFF</color>
     <color name="item_pressed">#F2F2F5</color>
     <color name="divider">#dddddd</color>
-    <color name="blue_a">#3ca6fe</color>
+    <color name="blue_a">#5FD5A4</color>
     <color name="transparent">#00000000</color>
     <color name="light_gray">#FFEEEEEE</color>
-    <color name="blue_c">#3095E9</color>
+    <color name="blue_c">#5FD5A4</color>
     <color name="red_c">#FA3B3B</color>
     <color name="color_ed">#EDEDED</color>
     <color name="black_h">#F2F5F7</color>

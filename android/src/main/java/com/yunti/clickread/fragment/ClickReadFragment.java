@@ -2,6 +2,7 @@ package com.yunti.clickread.fragment;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -338,6 +339,30 @@ public class ClickReadFragment extends Fragment implements
             }
         }
         return 0L;
+    }
+
+    private Long getChapterId() {
+        Object chapterId = getArguments() != null ? getArguments().get("chapterId") : null;
+        if (chapterId != null) {
+            if (chapterId instanceof Double) {
+                return ((Double) chapterId).longValue();
+            } else if (chapterId instanceof String) {
+                return Long.parseLong(chapterId.toString());
+            }
+        }
+        return null;
+    }
+
+    private Long getSectionId() {
+        Object sectionId = getArguments() != null ? getArguments().get("sectionId") : null;
+        if (sectionId != null) {
+            if (sectionId instanceof Double) {
+                return ((Double) sectionId).longValue();
+            } else if (sectionId instanceof String) {
+                return Long.parseLong(sectionId.toString());
+            }
+        }
+        return null;
     }
 
     private List<ClickReadPage> getClickReadPages(ClickReadDTO clickReadDTO) {
@@ -804,6 +829,14 @@ public class ClickReadFragment extends Fragment implements
     }
 
     private void restorePageIndex(RNYtClickreadModule.Callback callback) {
+        Integer initialPageIndex = getInitialPageIndex();
+        if (initialPageIndex != null) {
+            mRestoreCompleted[0] = false;
+            mRestoreCompleted[1] = false;
+            callback.resolve(String.valueOf(initialPageIndex));
+            return;
+        }
+
         if (mRestorePageIndex != -1) {
             mRestoreCompleted[0] = false;
             mRestoreCompleted[1] = false;
@@ -830,6 +863,50 @@ public class ClickReadFragment extends Fragment implements
                         }
                     }, this);
         }
+    }
+
+    private Integer getInitialPageIndex() {
+        Long chapterId = getChapterId() ;
+        Long sectionId = getSectionId() ;
+        if (chapterId == null && sectionId == null) {
+            return null;
+        }
+        if (mClickReadDTO == null || mClickReadDTO.getChapters() == null) {
+            return null;
+        }
+
+        int rawIndex = -1;
+        int tempIndex = 0;
+        boolean found = false;
+
+        for (ClickReadCatalogDTO chapter : mClickReadDTO.getChapters()) {
+            if (chapterId != null && chapterId.equals(chapter.getId())) {
+                rawIndex = tempIndex;
+                found = true;
+                break;
+            }
+            if (chapter.getSections() != null) {
+                for (ClickReadCatalogDTO section : chapter.getSections()) {
+                    if (sectionId != null && sectionId.equals(section.getId())) {
+                        rawIndex = tempIndex;
+                        found = true;
+                        break;
+                    }
+                    if (section.getPages() != null) {
+                        tempIndex += section.getPages().size();
+                    }
+                }
+            }
+            if (found) {
+                break;
+            }
+        }
+
+        if (rawIndex == -1) {
+            return null;
+        }
+
+        return rawIndex;
     }
 
     private boolean isRestoreCompleted() {
