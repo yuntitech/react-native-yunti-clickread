@@ -5,6 +5,10 @@ import android.content.Context;
 import android.os.Looper;
 import android.text.TextUtils;
 
+import android.util.Base64;
+import android.util.Log;
+
+
 import androidx.fragment.app.Fragment;
 
 import com.alibaba.fastjson.JSON;
@@ -16,6 +20,10 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 import okhttp3.Call;
 import okhttp3.Request;
@@ -32,6 +40,8 @@ public class YTApi {
     public static final int API_CODE_CACHE = -1;
     public static final int API_CODE_NET = 0;
 
+    private static final String AES_KEY = "Suj4XDDt3jPsH9Jj";
+
 
     public static <T> void loadCacheAndFetch(FetchInfo.FetchInfoParams params, Callback<T> callback,
                                              Fragment fragment) {
@@ -42,7 +52,7 @@ public class YTApi {
                 JSONObject responseObject = JSON.parseObject(responseData);
                 ldv = responseObject.getString("ldv");
                 Boolean success = responseObject.getBoolean("success");
-                String data = responseObject.getString("data");
+                String data = getDataFromResponse(responseObject);
                 if (Boolean.TRUE.equals(success) && !TextUtils.isEmpty(data)) {
                     T result = (T) JSON.parseObject(data, params.getClazz());
                     onResponseExecute(callback, API_CODE_CACHE, result, fragment);
@@ -74,7 +84,7 @@ public class YTApi {
                 JSONObject responseObject = JSON.parseObject(responseData);
                 String ldv = responseObject.getString("ldv");
                 Boolean success = responseObject.getBoolean("success");
-                String data = responseObject.getString("data");
+                String data = getDataFromResponse(responseObject);
                 if (Boolean.TRUE.equals(success) && !TextUtils.isEmpty(data)) {
                     params.addLdv(ldv);
                     T result = (T) JSON.parseObject(data, params.getClazz());
@@ -147,7 +157,7 @@ public class YTApi {
         String responseData = response.body().string();
         JSONObject responseObject = JSON.parseObject(responseData);
         Boolean success = responseObject.getBoolean("success");
-        String data = responseObject.getString("data");
+        String data = getDataFromResponse(responseObject);
         if (Boolean.TRUE.equals(success) && !TextUtils.isEmpty(data)) {
             if (callback != null) {
                 T result = (T) JSON.parseObject(data, params.getClazz());
@@ -163,6 +173,36 @@ public class YTApi {
             }
             onFetchFailure(new IOException(responseObject.getString("msg")), callback, fragment);
         }
+    }
+
+    private static String getDataFromResponse(JSONObject response) {
+        if (response == null || !Boolean.TRUE.equals(response.getBoolean("success"))) {
+            return null;
+        }
+
+        Boolean encrypted = response.getBoolean("encrypted");
+        if (encrypted == null || !encrypted) {
+            return response.getString("data");
+        }
+
+        String encryptedData = response.getString("encryptedData");
+        if (!TextUtils.isEmpty(encryptedData)) {
+            try {
+                return decrypt(encryptedData, AES_KEY);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    private static String decrypt(String encryptedData, String key) throws Exception {
+        byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
+        byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+        return new String(decryptedBytes, StandardCharsets.UTF_8);
     }
 
     private static String getApiCache(FetchInfo.FetchInfoParams infoParams, Fragment fragment) {
