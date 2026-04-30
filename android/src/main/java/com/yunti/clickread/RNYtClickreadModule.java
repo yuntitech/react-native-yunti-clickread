@@ -29,6 +29,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.reactnativecommunity.asyncstorage.AsyncStorageModule;
 import com.yt.ytdeep.client.dto.ClickReadDTO;
+import com.yt.ytdeep.client.dto.ClickReadPage;
 import com.yt.ytdeep.client.dto.ClickReadTrackinfo;
 import com.yunti.clickread.activity.ClickReadActivity;
 import com.yunti.clickread.dialog.BottomOptionDialog;
@@ -275,6 +276,65 @@ public class RNYtClickreadModule extends ReactContextBaseJavaModule {
         }
         Intent intent = new Intent(RNYtClickreadModule.NAME);
         intent.putExtra("action", "joinBookShelfSuccess");
+        LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
+    }
+
+    public static void resumeLearnJour(
+            Context cxt,
+            ClickReadDTO clickReadDTO,
+            ClickReadPage page,
+            Long bookId
+    ) {
+        if (cxt == null || clickReadDTO == null) {
+            return;
+        }
+        Intent intent = new Intent(RNYtClickreadModule.NAME);
+        intent.putExtra("action", "learnJourResume");
+        if (clickReadDTO.getId() != null) {
+            intent.putExtra("clickReadId", clickReadDTO.getId());
+        }
+        Long resolvedBookId = clickReadDTO.getBookId() != null ? clickReadDTO.getBookId() : bookId;
+        if (resolvedBookId != null) {
+            intent.putExtra("bookId", resolvedBookId);
+        }
+        if (clickReadDTO.getBookName() != null) {
+            intent.putExtra("bookName", clickReadDTO.getBookName());
+        }
+        if (page != null && page.getImgResId() != null) {
+            intent.putExtra("imgResId", page.getImgResId());
+        }
+        LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
+    }
+
+    public static void pauseLearnJour(Context cxt) {
+        if (cxt == null) {
+            return;
+        }
+        Intent intent = new Intent(RNYtClickreadModule.NAME);
+        intent.putExtra("action", "learnJourPause");
+        LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
+    }
+
+    public static void reportLearnJourCount(
+            Context cxt,
+            ClickReadDTO clickReadDTO,
+            Long bookId
+    ) {
+        if (cxt == null || clickReadDTO == null) {
+            return;
+        }
+        Intent intent = new Intent(RNYtClickreadModule.NAME);
+        intent.putExtra("action", "learnJourCount");
+        if (clickReadDTO.getId() != null) {
+            intent.putExtra("clickReadId", clickReadDTO.getId());
+        }
+        Long resolvedBookId = clickReadDTO.getBookId() != null ? clickReadDTO.getBookId() : bookId;
+        if (resolvedBookId != null) {
+            intent.putExtra("bookId", resolvedBookId);
+        }
+        if (clickReadDTO.getBookName() != null) {
+            intent.putExtra("bookName", clickReadDTO.getBookName());
+        }
         LocalBroadcastManager.getInstance(cxt.getApplicationContext()).sendBroadcast(intent);
     }
 

@@ -103,13 +103,21 @@ public class ClickReadFragment extends Fragment implements
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        notifyLearnJourState();
+    }
+
+    @Override
     public void onStop() {
+        RNYtClickreadModule.pauseLearnJour(getContext());
         super.onStop();
         storePageIndex();
     }
 
     @Override
     public void onDestroy() {
+        RNYtClickreadModule.pauseLearnJour(getContext());
         if (mPlayerManager != null) {
             mPlayerManager.release();
         }
@@ -391,6 +399,7 @@ public class ClickReadFragment extends Fragment implements
 
     @Override
     public void onClickHotArea(ClickReadTrackinfo track) {
+        reportLearnJourCount(track);
         if (mPlayerManager != null) {
             stopPlayTracksIfNeeded();
             mPlayerManager.play(track);
@@ -398,7 +407,8 @@ public class ClickReadFragment extends Fragment implements
     }
 
     @Override
-    public void onClickSameArea() {
+    public void onClickSameArea(ClickReadTrackinfo track) {
+        reportLearnJourCount(track);
         if (mPlayerManager != null) {
             stopPlayTracksIfNeeded();
             mPlayerManager.playAgain();
@@ -461,6 +471,9 @@ public class ClickReadFragment extends Fragment implements
 
     @Override
     public void onSwitchTrack(ClickReadTrackinfo trackInfo) {
+        if (mPlayerManager != null && mPlayerManager.isPlayTracks()) {
+            reportLearnJourCount(trackInfo);
+        }
         ClickReadPageView pageView = getCurrentPageView();
         if (pageView != null) {
             pageView.switchTrack(trackInfo);
@@ -520,6 +533,7 @@ public class ClickReadFragment extends Fragment implements
                 setButtonsVisible(true);
             }
         }
+        notifyLearnJourState();
     }
 
     @Override
@@ -609,6 +623,7 @@ public class ClickReadFragment extends Fragment implements
         if (mDelegate != null) {
             mDelegate.onBuyResult(isBought);
         }
+        mViewPager.post(this::notifyLearnJourState);
     }
 
     public void scrollToPage(ClickReadPage page) {
@@ -620,6 +635,49 @@ public class ClickReadFragment extends Fragment implements
 
     public ClickReadPage getCurrentPage() {
         return mPagerAdapter.getItem(mViewPager.getCurrentItem());
+    }
+
+    private boolean shouldTrackLearnJour(ClickReadPage page) {
+        if (page == null || page.getImgResId() == null) {
+            return false;
+        }
+
+        return isBought || mViewPager.getCurrentItem() < mPagerAdapter.getCount() - 1;
+    }
+
+    private void notifyLearnJourState() {
+        if (getContext() == null || mClickReadDTO == null || mViewPager == null || mPagerAdapter == null) {
+            return;
+        }
+
+        ClickReadPage currentPage = getCurrentPage();
+        if (!shouldTrackLearnJour(currentPage)) {
+            RNYtClickreadModule.pauseLearnJour(getContext());
+            return;
+        }
+
+        RNYtClickreadModule.resumeLearnJour(
+                getContext(),
+                mClickReadDTO,
+                currentPage,
+                getBookId()
+        );
+    }
+
+    private void reportLearnJourCount(ClickReadTrackinfo track) {
+        if (getContext() == null || mClickReadDTO == null || track == null) {
+            return;
+        }
+
+        if (Integer.valueOf(1).equals(track.getType())) {
+            return;
+        }
+
+        RNYtClickreadModule.reportLearnJourCount(
+                getContext(),
+                mClickReadDTO,
+                getBookId()
+        );
     }
 
     private void renderButtonEnable(boolean enable) {
@@ -646,6 +704,7 @@ public class ClickReadFragment extends Fragment implements
                     scrollToPosition(mRestorePageIndex);
                 },
                 300);
+        mViewPager.post(this::notifyLearnJourState);
     }
 
     private void renderFreePages() {

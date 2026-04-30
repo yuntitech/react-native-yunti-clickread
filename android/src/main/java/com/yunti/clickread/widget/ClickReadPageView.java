@@ -116,7 +116,7 @@ public class ClickReadPageView extends RelativeLayout {
                         && mCurFrame.top == frame.top
                         && mCurFrame.bottom == frame.bottom) {
                     if (mDelegate != null && position < mClickPage.getTracks().size()) {
-                        mDelegate.onClickSameArea();
+                        mDelegate.onClickSameArea(mClickPage.getTracks().get(position));
                         switchFrame(mCurFrame);
                     }
                 } else {
@@ -443,7 +443,7 @@ public class ClickReadPageView extends RelativeLayout {
 
         void onClickHotArea(ClickReadTrackinfo track);
 
-        void onClickSameArea();
+        void onClickSameArea(ClickReadTrackinfo track);
 
         void onClickOtherArea();
 
